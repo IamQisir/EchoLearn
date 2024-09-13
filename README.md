@@ -1,1 +1,2 @@
-# Echo English Learnign System
+# EchoLearn
+EchoLearn is multi-modal English learning platform.
