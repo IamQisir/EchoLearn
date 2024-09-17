@@ -122,5 +122,5 @@ else:
             "Account": [login_page, register_page]
         }
     )
-
+st.sidebar.header("Welcome to Echo English Learning System!")
 pg.run()

@@ -43,8 +43,6 @@ def get_color(score):
 
 # Function to create radar chart
 def create_radar_chart(pronunciation_result):
-    st.write(f"pronunciation_result 構造: {json.dumps(pronunciation_result, indent=2)}")
-
     overall_assessment = pronunciation_result["NBest"][0]["PronunciationAssessment"]
 
     categories = {
@@ -71,10 +69,7 @@ def create_radar_chart(pronunciation_result):
 
     plt.title("発音評価のレーダーチャート")
 
-    st.write(f"分数: {scores}")
-
     return fig
-
 
 def create_waveform_plot(audio_file, pronunciation_result):
     y, sr = librosa.load(audio_file)
@@ -119,20 +114,43 @@ def create_waveform_plot(audio_file, pronunciation_result):
         )
         ax.axvline(x=start_time, color="gray", linestyle="--", alpha=0.5)
 
+        if "Phonemes" in word:
+            for phoneme in word["Phonemes"]:
+                phoneme_start = phoneme["Offset"] / 10000000
+                phoneme_duration = phoneme["Duration"] / 10000000
+                phoneme_end = phoneme_start + phoneme_duration
+
+                phoneme_score = phoneme["PronunciationAssessment"].get("AccuracyScore", 0)
+                phoneme_color = get_color(phoneme_score)
+
+                # 绘制音节的垂直线
+                # ax.axvline(x=phoneme_start, color='black', linestyle='--', alpha=0.5)
+                # ax.axvline(x=phoneme_end, color='black', linestyle='--', alpha=0.5)
+                
+                # 添加音节 Phoneme 标签
+                ax.text(
+                    phoneme_start,
+                    ax.get_ylim()[1],
+                    phoneme["Phoneme"],
+                    ha="left",
+                    va="top",
+                    fontsize=6,
+                    color = phoneme_color
+                )
+        ax.axvline(x=start_time, color="gray", linestyle="--", alpha=0.5)
+
     ax.set_xlabel("Time (seconds)")
     ax.set_ylabel("Amplitude")
-    ax.set_title("Waveform with Pronunciation Assessment")
-
+    ax.set_title("音声の波形と発音評価")
     plt.tight_layout()
 
     return fig
-
 
 def pronunciation_assessment(audio_file, reference_text):
     print("進入 pronunciation_assessment 関数")
 
     # Be Aware!!! We are using free keys here but nonfree keys in Avatar
-    speech_key, service_region = st.secrets['Azure Speech']['SPEECH_KEY'], st.secrets['Azure Speech']['SPEECH_REGION']
+    speech_key, service_region = st.secrets['Azure_Speech']['SPEECH_KEY'], st.secrets['Azure_Speech']['SPEECH_REGION']
     print(f"SPEECH_KEY: {speech_key}, SPEECH_REGION: {service_region}")
 
     speech_config = speechsdk.SpeechConfig(
@@ -210,8 +228,6 @@ def create_error_table(pronunciation_result):
 
     # Create DataFrame
     df = pd.DataFrame(list(error_types.items()), columns=["エラータイプ", "回数"])
-
-    st.write(df)
     return df
 
 
@@ -283,12 +299,12 @@ def main():
                 pronunciation_result = pronunciation_assessment(
                     "resampled_audio.wav", input_text
                 )
-                st.write(pronunciation_result)
+                # TODO: save this result to file
+                # st.write(pronunciation_result)
 
                 overall_score = pronunciation_result["NBest"][0][
                     "PronunciationAssessment"
                 ]
-                st.write(f"Overall Score: {overall_score}")
 
                 # Create and display radar chart
                 radar_chart = create_radar_chart(pronunciation_result)
