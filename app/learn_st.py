@@ -1,77 +1,50 @@
 import streamlit as st
-import os
-import base64
+import numpy as np
+import matplotlib.pyplot as plt
+from audio_recorder_streamlit import audio_recorder
+import librosa
+import io
+import soundfile as sf
+from streamlit_extras.customize_running import center_running
+from time import sleep
 
-# 创建一个文件夹来保存录制的音频
-if not os.path.exists("recordings"):
-    os.makedirs("recordings")
 
-# 定义一个函数来保存录制的音频
-def save_audio(audio_data, filename):
-    with open(filename, "wb") as f:
-        f.write(audio_data)
+st.set_page_config(layout="wide")
 
-# 定义一个函数来显示录制的音频
-def show_audio(filename):
-    with open(filename, "rb") as f:
-        audio_bytes = f.read()
-    b64 = base64.b64encode(audio_bytes).decode()
-    audio_tag = f'<audio controls src="data:audio/wav;base64,{b64}"></audio>'
-    st.markdown(audio_tag, unsafe_allow_html=True)
+def audio_page():
+    col1, col2 = st.columns([0.3, 0.7])
+    with col1:
+        with st.container(border=True):
+            audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
+            if audio_bytes:
+                # make audio_bytes to a file
+                audio_file = io.BytesIO(audio_bytes)
 
-# 定义一个函数来录制音频
-def record_audio():
-    st.write("请点击按钮开始录制音频")
-    if st.button("开始录制"):
-        st.write("录制中... 请点击停止按钮结束录制")
-        st.write("""
-        <script>
-        const startRecording = () => {
-            const constraints = { audio: true };
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(stream => {
-                    const mediaRecorder = new MediaRecorder(stream);
-                    const audioChunks = [];
+                # load data using soundfile
+                y, sr = sf.read(audio_file, dtype='float32')
 
-                    mediaRecorder.addEventListener("dataavailable", event => {
-                        audioChunks.push(event.data);
-                    });
+                # running man in the center!
+                center_running()
+                sleep(2)
 
-                    mediaRecorder.addEventListener("stop", () => {
-                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                        const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
-                        reader.onloadend = () => {
-                            const base64data = reader.result;
-                            const audioData = base64data.split(',')[1];
-                            const audioBytes = atob(audioData);
-                            const audioArray = new Uint8Array(audioBytes.length);
-                            for (let i = 0; i < audioBytes.length; i++) {
-                                audioArray[i] = audioBytes.charCodeAt(i);
-                            }
-                            const audioBuffer = audioArray.buffer;
-                            const filename = "recordings/recording.wav";
-                            save_audio(audioBuffer, filename);
-                            show_audio(filename);
-                        };
-                    });
+                # plot the waveform of the audio file
+                fig, ax = plt.subplots(figsize=(10, 4))
+                librosa.display.waveshow(y, sr=sr)
+                plt.title("Audio Waveform")
+                plt.xlabel("Time [s]")
+                plt.ylabel("Amplitude")
+                plt.grid(True)
+                st.pyplot(fig)
+    with col2:
+        with st.container(border=True):
+            youglish_html = """
+            <div style="width:50%;max-width:640px;">
+                <a id="yg-widget-0" class="youglish-widget" data-query="great power" data-lang="english" 
+                data-components="8415" data-bkg-color="theme_light" rel="nofollow" 
+                href="https://youglish.com">Visit YouGlish.com</a>
+            </div>
+            """
+            st.components.v1.html(youglish_html, height=300)
 
-                    mediaRecorder.start();
 
-                    st.button("停止录制", on_click=() => {
-                        mediaRecorder.stop();
-                    });
-                });
-        };
-        startRecording();
-        </script>
-        """, unsafe_allow_html=True)
-
-# 主函数
-def main():
-    st.title("Streamlit 音频录制示例")
-    record_audio()
-
-if __name__ == "__main__":
-    main()
-main()
+audio_page()
