@@ -11,6 +11,8 @@ import streamlit as st
 import google.generativeai as genai
 import soundfile as sf
 import azure.cognitiveservices.speech as speechsdk
+from audio_recorder_streamlit import audio_recorder
+from streamlit_extras.row import row as extras_row
 
 import sys
 import os
@@ -272,12 +274,18 @@ def ai_respond(message, chat_history):
     time.sleep(0.5)
     return chat_history
 
+def get_audio_from_mic():
+    audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
+    sf.write
 
+# page layout
 def main():
     st.title("エコー英語学習システム")
-    st.markdown("音声をアップロードするか、マイクで録音して発音を評価します。")
+    # TODO: Doing!
+    # row1 = extras_row([0.4, 0.4, 0.2])
+    # row1.video()
 
-    st.sidebar.header("Echo English Learning System")
+    st.markdown("音声をアップロードするか、マイクで録音して発音を評価します。")
 
     input_text = st.text_input(
         "勉強しよう！", "Hello, I am Echo English Trainer. How can I help you?"
