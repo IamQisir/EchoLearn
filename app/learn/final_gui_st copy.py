@@ -12,7 +12,9 @@ import google.generativeai as genai
 import soundfile as sf
 import azure.cognitiveservices.speech as speechsdk
 from audio_recorder_streamlit import audio_recorder
-from streamlit_extras.row import row as extras_row
+from streamlit_extras.grid import grid as extras_grid
+from user import User
+from dataset import Dataset
 
 import sys
 import os
@@ -34,12 +36,16 @@ model = genai.GenerativeModel("gemini-pro")
 # Function to get color based on score
 def get_color(score):
     if score >= 90:
+        # green
         return "#00ff00"
     elif score >= 75:
+        # yellow
         return "#ffff00"
     elif score >= 50:
+        # orange
         return "#ffa500"
     else:
+        # red
         return "#ff0000"
 
 
@@ -266,7 +272,6 @@ def create_syllable_table(pronunciation_result):
     output += "</table>"
     return output
 
-
 # Function to respond to chatbot
 def ai_respond(message, chat_history):
     bot_message = model.generate_content(message).text
@@ -274,101 +279,30 @@ def ai_respond(message, chat_history):
     time.sleep(0.5)
     return chat_history
 
-# TODO: get_audio_from_mic
 def get_audio_from_mic():
     audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
     sf.write
 
-# page layout
+# layout of learning page
 def main():
+    if st.session_state.user is None:
+        st.warning("User is None! Something wrong happened!")
+    user = st.session_state.user
+    dataset = Dataset(user.name)
+
     st.title("エコー英語学習システム")
-    # TODO: Doing!
-    # row1 = extras_row([0.4, 0.4, 0.2])
-    # row1.video()
-
-    st.markdown("音声をアップロードするか、マイクで録音して発音を評価します。")
-
-    input_text = st.text_input(
-        "勉強しよう！", "Hello, I am Echo English Trainer. How can I help you?"
-    )
-    audio_file = st.file_uploader("音声入力", type=["wav", "mp3"])
-
-    if st.button("学習開始！"):
-        if audio_file is not None:
-            # Save uploaded file temporarily
-            with open("temp_audio.wav", "wb") as f:
-                f.write(audio_file.getvalue())
-
-            try:
-                # Resample the audio to 16kHz
-                y, sr = librosa.load("temp_audio.wav", sr=16000)
-                sf.write("resampled_audio.wav", y, sr)
-
-                # Perform pronunciation assessment
-                pronunciation_result = pronunciation_assessment(
-                    "resampled_audio.wav", input_text
-                )
-                # TODO: save this result to file
-                # st.write(pronunciation_result)
-
-                overall_score = pronunciation_result["NBest"][0][
-                    "PronunciationAssessment"
-                ]
-
-                # Create and display radar chart
-                radar_chart = create_radar_chart(pronunciation_result)
-                st.pyplot(radar_chart)
-
-                # Create and display waveform plot
-                waveform_plot = create_waveform_plot(
-                    "resampled_audio.wav", pronunciation_result
-                )
-                st.pyplot(waveform_plot)
-
-                # Create and display error table
-                error_table = create_error_table(pronunciation_result)
-                st.dataframe(error_table)
-
-                # Create and display syllable table
-                syllable_table = create_syllable_table(pronunciation_result)
-                st.markdown(syllable_table, unsafe_allow_html=True)
-
-                # Generate and display avatar video
-                # avatar_video = generate_avatar_video(input_text)
-                # st.video(avatar_video)
-
-            except Exception as e:
-                st.error(f"エラーが発生しました: {str(e)}")
-                st.error(
-                    "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
-                )
-
-            finally:
-                # Clean up temporary files
-                for file in ["temp_audio.wav", "resampled_audio.wav"]:
-                    if os.path.exists(file):
-                        os.remove(file)
-        else:
-            st.warning("音声ファイルをアップロードしてください。")
-
-    # Chat interface
-    st.header("英語学習コンサルタント")
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-
-    for message in st.session_state.chat_history:
-        st.text(f"You: {message[0]}")
-        st.text(f"AI: {message[1]}")
-
-    user_input = st.text_input("質問欄")
-    if st.button("送信"):
-        st.session_state.chat_history = ai_respond(
-            user_input, st.session_state.chat_history
-        )
-
-    if st.button("チャットをリセット"):
-        st.session_state.chat_history = []
-
+    my_grid = extras_grid(2, 2, 2, 4, vertical_align="bottom")
+    # row1: selectbox and blank
+    selection = my_grid.selectbox("レッソンを選ぶ", ['レッソン1', 'レッソン2', 'レッソン3'])
+    if selection == 'レッソン1':
+        selected_lessons = dataset.text_data[0], dataset.video_data[0]
+    elif selection == 'レッソン2':
+        selected_lessons = dataset.text_data[1], dataset.video_data[1]
+    elif selection == 'レッソン3':
+        selected_lessons = dataset.text_data[2], dataset.video_data[2]
+    # row2: video, text
+    my_grid.video(dataset.path + selected_lessons[1])
+    my_grid.markdown(dataset.path + selected_lessons[0])
 
 if __name__ == "__main__":
     main()

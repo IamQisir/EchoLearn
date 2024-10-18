@@ -19,18 +19,29 @@ class User:
         # hash the password to ensure the cybersecurity
         self.password = User.hash_password(password)
         self.folder_path = User.folder_path + f"/{name}/"
-        # learning_data_path stores all the learning materials for specific user
-        self.learning_data_path = self.folder_path + "/learning_data/"
         # every practice will be stored 
         self.practice_history = self.folder_path + "/practice_history/"
     
     def save_to_user_info(self) -> None:
+        # update the user_info like registering a new user
         User.user_info[self.name] = {
             "password": self.password,
             "history": []
         }
         with open(User.user_info_path, 'w') as f:
             json.dump(User.user_info, f, indent=4)
+    
+    def save_history(self, voice_file:str, pronunciation_result:str):
+        # save all the users' practice history
+        # if the folder already exists, don't rewrite it 
+        try:
+            # create a folder whose name is string format of today
+            os.makedirs(str(date.today()), exist_ok=False)
+        except:
+            pass
+        # TODO: save using session state
+        
+
     
     @classmethod
     def register(cls, name:str, password:str):

@@ -60,8 +60,11 @@ def login():
     if st.button("Log in"):
         user = User.login(username, password)
         if user:
+            center_running()
             sleep(2)
             st.session_state.logged_in = True
+            # !!!pass the user obj to any page!!!
+            st.session_state.user = user
             global learning_page
             st.switch_page(learning_page)
             
