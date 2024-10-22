@@ -139,7 +139,7 @@ def create_waveform_plot(audio_file, pronunciation_result):
                     fontsize=6,
                     color = phoneme_color
                 )
-        ax.axvline(x=start_time, color="gray", linestyle="--", alpha=0.5)
+        ax.axvline(x=end_time, color="gray", linestyle="--", alpha=0.5)
 
     ax.set_xlabel("Time (seconds)")
     ax.set_ylabel("Amplitude")
@@ -266,7 +266,6 @@ def create_syllable_table(pronunciation_result):
     output += "</table>"
     return output
 
-
 # Function to respond to chatbot
 def ai_respond(message, chat_history):
     bot_message = model.generate_content(message).text
@@ -277,7 +276,7 @@ def ai_respond(message, chat_history):
 # TODO: get_audio_from_mic
 def get_audio_from_mic():
     audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
-    sf.write
+    return None
 
 # page layout
 def main():

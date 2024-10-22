@@ -60,8 +60,6 @@ def login():
     if st.button("Log in"):
         user = User.login(username, password)
         if user:
-            center_running()
-            sleep(2)
             st.session_state.logged_in = True
             # !!!pass the user obj to any page!!!
             st.session_state.user = user
@@ -98,7 +96,7 @@ register_page = st.Page(register, title="Register", icon=":material/login:")
 logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
 
 # Learning-related Page
-learning_page = st.Page("../app/learn/final_gui_st.py", title='Learning Phase')
+learning_page = st.Page("../app/learn/final_gui_st2.py", title='Learning Phase')
 learn_st_page = st.Page("../app/learn_st.py", title='Mic Test')
 
 # Set the navigation of sidebar

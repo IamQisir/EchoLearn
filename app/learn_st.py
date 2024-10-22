@@ -14,7 +14,7 @@ def audio_page():
         with st.container(border=True):
             audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
             if audio_bytes:
-                # make audio_bytes to a file
+                # save audio_bytes to a file
                 audio_file = io.BytesIO(audio_bytes)
                 st.audio(audio_file)
 
