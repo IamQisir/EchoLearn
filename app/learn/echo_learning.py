@@ -7,16 +7,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
-import google.generativeai as genai
 import soundfile as sf
 import azure.cognitiveservices.speech as speechsdk
 from audio_recorder_streamlit import audio_recorder
 from streamlit_extras.grid import grid as extras_grid
-from user import User
 from dataset import Dataset
-from datetime import date
 from datetime import datetime
 import traceback
+from streamlit_extras.let_it_rain import rain
 
 import sys
 import os
@@ -26,10 +24,6 @@ sys.path.append(os.path.abspath("app/tools"))
 
 # Initialize global variables for storing radar chart per attempt and error types
 plt.rcParams["font.family"] = "MS Gothic"
-
-# Obtain your API key from the Google AI Studio
-genai.configure(api_key=st.secrets["Gemini"]["GOOGLE_API_KEY"])
-model = genai.GenerativeModel("gemini-pro")
 
 # Function to get color based on score
 def get_color(score):
@@ -154,7 +148,6 @@ def create_waveform_plot(audio_file, pronunciation_result):
 
     return fig
 
-
 def pronunciation_assessment(audio_file, reference_text):
     print("進入 pronunciation_assessment 関数")
 
@@ -209,12 +202,12 @@ def pronunciation_assessment(audio_file, reference_text):
 # Function to create error statistics table
 def create_error_table(pronunciation_result):
     error_types = {
-        "省略 (Omission)": 0,  # Omission
-        "挿入 (Insertion)": 0,  # Insertion
-        "発音ミス (Mispronunciation)": 0,  # Mispronunciation
-        "不適切な間 (UnexpectedBreak)": 0,  # UnexpectedBreak
-        "間の欠如 (MissingBreak)": 0,  # MissingBreak
-        "単調 (Monoton)": 0,  # Monoton
+        "省略 (Omission)": {'回数': 0, '単語': []},  # Omission
+        "挿入 (Insertion)": {'回数': 0, '単語': []},  # Insertion
+        "発音ミス (Mispronunciation)": {'回数': 0, '単語': []},  # Mispronunciation
+        "不適切な間 (UnexpectedBreak)": {'回数': 0, '単語': []},  # UnexpectedBreak
+        "間の欠如 (MissingBreak)": {'回数': 0, '単語': []},  # MissingBreak
+        "単調 (Monotone)": {'回数': 0, '単語': []},  # Monotone
     }
 
     words = pronunciation_result["NBest"][0]["Words"]
@@ -225,20 +218,26 @@ def create_error_table(pronunciation_result):
         ):
             error_type = word["PronunciationAssessment"]["ErrorType"]
             if error_type == "Omission":
-                error_types["省略 (Omission)"] += 1
+                error_types["省略 (Omission)"]["回数"] += 1
+                error_types["省略 (Omission)"]["単語"].append(word["Word"])
             elif error_type == "Insertion":
-                error_types["挿入 (Insertion)"] += 1
+                error_types["挿入 (Insertion)"]["回数"] += 1
+                error_types["挿入 (Insertion)"]["単語"].append(word["Word"])
             elif error_type == "Mispronunciation":
-                error_types["発音ミス (Mispronunciation)"] += 1
+                error_types["発音ミス (Mispronunciation)"]["回数"] += 1
+                error_types["発音ミス (Mispronunciation)"]["単語"].append(word["Word"])
             elif error_type == "UnexpectedBreak":
-                error_types["不適切な間 (UnexpectedBreak)"] += 1
+                error_types["不適切な間 (UnexpectedBreak)"]["回数"] += 1
+                error_types["不適切な間 (UnexpectedBreak)"]["単語"].append(word["Word"])
             elif error_type == "MissingBreak":
-                error_types["間の欠如 (MissingBreak)"] += 1
+                error_types["間の欠如 (MissingBreak)"]["回数"] += 1
+                error_types["間の欠如 (MissingBreak)"]["単語"].append(word["Word"])
             elif error_type == "Monoton":
-                error_types["単調 (Monotone)"] += 1
+                error_types["単調 (Monotone)"]["回数"] += 1
+                error_types["単調 (Monotone)"]["単語"].append(word["Word"])
 
     # Create DataFrame
-    df = pd.DataFrame(list(error_types.items()), columns=["エラータイプ", "回数"])
+    df = pd.DataFrame.from_dict(error_types, orient='index')
     return df
 
 
@@ -275,13 +274,6 @@ def create_syllable_table(pronunciation_result):
     output += "</table>"
     return output
 
-# Function to respond to chatbot
-def ai_respond(message, chat_history):
-    bot_message = model.generate_content(message).text
-    chat_history.append((message, bot_message))
-    time.sleep(0.5)
-    return chat_history
-
 def get_audio_from_mic(user, selection) -> str:
     # record audio from mic and save it to a wav file, and return the name of the file
     sample_rate = 16000
@@ -296,6 +288,7 @@ def get_audio_from_mic(user, selection) -> str:
         sf.write(
             output_filename, audio_data, sample_rate, format="WAV", subtype="PCM_16"
         )
+        print("audio has been saved!")
 
     # collect voice bytes data from audio_recorder
     audio_bytes = audio_recorder(
@@ -319,12 +312,14 @@ def main():
     dataset = Dataset(user.name)
     dataset.load_data()
 
-    st.title("エコー英語学習システム")
+    st.title("エコー英語学習システム😆")
     # the layout of the grid structure
-    my_grid = extras_grid(1, [0.2, 0.8], [0.3, 0.4], 2, 1, 1, vertical_align="bottom")
+    my_grid = extras_grid(1, [0.2, 0.8], 1, 2, 1, 1, vertical_align="center")
     # when using my_grid, we need the help of st to avoid wrong layout
+    # we could load only some rows of my_grid, which is a useful trick
 
     # row1: selectbox and blank
+    # TODO: should make the selectionbox more efficient
     selection = my_grid.selectbox(
         "レッソンを選ぶ", ["レッソン1", "レッソン2", "レッソン3"]
     )
@@ -349,52 +344,62 @@ def main():
     with open(dataset.path + selected_lessons["text"], "r") as f:
         text_content = f.read()
     # TODO: how to set the font and size?
-    my_grid.markdown(dataset.path + text_content)
+    my_grid.markdown(text_content)
 
     # row3: mic and learning button
-    # main working
-    # initialize all the elements with None
+    # main work will be done here
+    # initialize all the elements with None for convenience
     overall_score = radar_chart = waveform_plot = error_table = syllable_table = None
-    with my_grid.container(border=True):
-        audio_file_name = get_audio_from_mic(user, selection)
-    with my_grid.container(border=True):
-        if st.button("学習開始！", use_container_width=True) and audio_file_name:
-            try:
-                pronunciation_result = pronunciation_assessment(
-                    audio_file=audio_file_name, reference_text=text_content
-                )
-                # save the pronunciation_result to disk
-                user.save_pron_history(selection, pronunciation_result)
 
-                overall_score = pronunciation_result["NBest"][0][
-                    "PronunciationAssessment"
-                ]
-                radar_chart = create_radar_chart(pronunciation_result)
-                waveform_plot = create_waveform_plot(
-                    audio_file_name, pronunciation_result
-                )
-                error_table = create_error_table(pronunciation_result)
-                syllable_table = create_syllable_table(pronunciation_result)
-            except Exception as e:
-                st.error(f"エラーが発生しました: {str(e)}")
-                st.error(
-                    "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
-                )
-                print(traceback.format_exc())
+    with my_grid.container(height=150,border=False):
+        audio_file_name = get_audio_from_mic(user, selection)
+    if audio_file_name:
+        try:
+            pronunciation_result = pronunciation_assessment(
+                audio_file=audio_file_name, reference_text=text_content
+            )
+            # save the pronunciation_result to disk
+            user.save_pron_history(selection, pronunciation_result)
+
+            overall_score = pronunciation_result["NBest"][0][
+                "PronunciationAssessment"
+            ]
+            radar_chart = create_radar_chart(pronunciation_result)
+            waveform_plot = create_waveform_plot(
+                audio_file_name, pronunciation_result
+            )
+            error_table = create_error_table(pronunciation_result)
+            syllable_table = create_syllable_table(pronunciation_result)
+
+            # save the essential information to st.session_state to pass to AI chatbox
+            st.session_state.error_table = error_table
+
+        except Exception as e:
+            st.error(f"エラーが発生しました: {str(e)}")
+            st.error(
+                "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
+            )
+            print(traceback.format_exc())
     # row4: radar chart and errors' type
-    # TODO: is it to initialize all the elements with None
     if radar_chart:
         my_grid.pyplot(radar_chart)
     if error_table is not None:
         my_grid.dataframe(error_table)
-
     # row5: waveform
     if waveform_plot:
         my_grid.pyplot(waveform_plot)
-
     # row6: summarization of syllable mistakes and feedback of AI
     if syllable_table:
         my_grid.markdown(syllable_table, unsafe_allow_html=True)
+    
+    # if overall score is higher than 80, rain the balloons
+    if overall_score and overall_score['PronScore'] >= 80:
+        rain(
+            emoji="🥳🎉",
+            font_size=54,
+            falling_speed=5,
+            animation_length=10,
+        )
 
 
 if __name__ == "__main__":

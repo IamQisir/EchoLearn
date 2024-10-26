@@ -20,7 +20,7 @@ class User:
         self.password = User.hash_password(password)
         self.user_path = f"database/{name}/"
         # every practice history will be stored 
-        self.practice_history_path = self.user_path + "/practice_history/"
+        self.practice_history_path = self.user_path + "practice_history/"
         # in order to save voice files within, to check and create folders in advance
         if not os.path.exists(self.practice_history_path):
             os.makedirs(self.practice_history_path, exist_ok=False)

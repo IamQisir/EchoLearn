@@ -5,7 +5,7 @@ import base64
 from streamlit_extras.customize_running import center_running
 from user import User
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_icon="logo/done_all.png")
 
 # Function to load user_info from a JSON file
 def load_user_info():
@@ -54,10 +54,10 @@ def login():
             f'<img src="data:image/gif;base64,{data_url}" alt="cat gif" class="center">',
             unsafe_allow_html=True,
         )
-    st.markdown("# Welcome to Echo English Learning System! :D Please login.")
-    username = st.text_input("Username", key="username")
-    password = st.text_input("Password", key="password", type="password")
-    if st.button("Log in"):
+    st.markdown("# EchoLearnへよこそう! 😍 発音を上達しましょう!")
+    username = st.text_input("ユーザー名", key="username")
+    password = st.text_input("パスワード", key="password", type="password")
+    if st.button("ログイン"):
         user = User.login(username, password)
         if user:
             st.session_state.logged_in = True
@@ -76,10 +76,10 @@ def register():
             f'<img src="data:image/gif;base64,{data_url}" alt="cat gif" class="center">',
             unsafe_allow_html=True,
         )
-    st.markdown("# Please Register to use Echo :)")
-    new_username = st.text_input("Username", key="new_username")
-    new_password = st.text_input("Password", key="new_password", type="password")
-    if st.button("Register"):
+    st.markdown("# 新規登録して利用できます! 😉")
+    new_username = st.text_input("ユーザー名", key="new_username")
+    new_password = st.text_input("パスワード", key="new_password", type="password")
+    if st.button("新規登録"):
         new_user = User.register(new_username, new_password)
         if new_user:
             sleep(2)
@@ -87,33 +87,35 @@ def register():
             st.switch_page(login_page)
 
 def logout():
-    st.session_state.logged_in = False
+    # After logging out, delete all the keys of st.session_state
+    for key in st.session_state.keys():
+        del st.session_state[key]
     st.rerun()
 
 # Account-related Page
-login_page = st.Page(login, title="Log in", icon=":material/login:")
-register_page = st.Page(register, title="Register", icon=":material/login:")
-logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
+login_page = st.Page(login, title="ログイン", icon=":material/login:")
+register_page = st.Page(register, title="新規登録", icon=":material/login:")
+logout_page = st.Page(logout, title="ログアウト", icon=":material/logout:")
 
 # Learning-related Page
-learning_page = st.Page("../app/learn/final_gui_st2.py", title='Learning Phase')
-learn_st_page = st.Page("../app/learn_st.py", title='Mic Test')
+learning_page = st.Page("../app/learn/echo_learning.py", title='エコーラーニング', icon="🔥")
+chatbox_page = st.Page("../app/learn/chatbox.py", title='エコー発音先生', icon="🚨")
 
 # Set the navigation of sidebar
 if st.session_state.logged_in:
     pg = st.navigation(
         {
-            "Account": [logout_page],
-            "Learn": [learning_page, learn_st_page],
+            "アカウント": [logout_page],
+            "ラーニング": [learning_page, chatbox_page],
         }
     )
 else:
     pg = st.navigation(
         {
-            "Account": [login_page, register_page]
+            "アカウント": [login_page, register_page]
         }
     )
 
 # Set the header of sidebar and run the main page
-st.sidebar.header("Welcome to Echo English Learning System!")
+st.sidebar.header("EchoLearnへようこそ! 😊")
 pg.run()
