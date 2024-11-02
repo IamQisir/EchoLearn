@@ -44,6 +44,16 @@ st.markdown(
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
+# ! learning_data is very important! it will be used to reload the page
+if "learning_data" not in st.session_state:
+    st.session_state['learning_data'] = {
+        'overall_score': None,
+        'radar_chart': None,
+        'waveform_plot': None,
+        'error_table': None,
+        'syllable_table': None
+    }
+
 def login():
     _, cent_co, _ = st.columns([0.2, 0.7, 0.1])
     with cent_co:
@@ -55,16 +65,19 @@ def login():
             unsafe_allow_html=True,
         )
     st.markdown("# EchoLearnへよこそう! 😍 発音を上達しましょう!")
-    username = st.text_input("ユーザー名", key="username")
-    password = st.text_input("パスワード", key="password", type="password")
-    if st.button("ログイン"):
-        user = User.login(username, password)
-        if user:
-            st.session_state.logged_in = True
-            # !!!pass the user obj to any page!!!
-            st.session_state.user = user
-            global learning_page
-            st.switch_page(learning_page)
+    with st.form(key='password_form'):
+        username = st.text_input("ユーザー名", key="username")
+        password = st.text_input("パスワード", key="password", type="password")
+        submit_button = st.form_submit_button(label='ログイン')
+
+        if submit_button:
+            user = User.login(username, password)
+            if user:
+                st.session_state.logged_in = True
+                # !!!pass the user obj to any page!!!
+                st.session_state.user = user
+                global learning_page
+                st.switch_page(learning_page)
             
 def register():
     _, cent_co, _ = st.columns([0.2, 0.7, 0.1])
@@ -83,6 +96,7 @@ def register():
         new_user = User.register(new_username, new_password)
         if new_user:
             sleep(2)
+            # initialize learning_data in st.session_state
             global login_page
             st.switch_page(login_page)
 

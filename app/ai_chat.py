@@ -10,6 +10,7 @@ class AIChat:
         self.prompt = ""
 
     def set_prompt(self, df):
+        # set initial prompt
         self.prompt = f"""
         あなたは発音の先生です。以下の発音エラーのリストを基に、各単語の正しい発音と改善のためのアドバイスを提供してください。
         発音エラーの統計 [エラータイプ、回数、単語]:
@@ -21,13 +22,13 @@ class AIChat:
         - 単調 (Monotone): 回数: {df.loc['単調 (Monotone)', '回数']}, 単語リスト: {df.loc['単調 (Monotone)', '単語']}
 
         各単語に対して、以下の形式で回答してください:
-        1. 単語: [単語]
+        1. 誤り[番号]: [単語]と[誤りの種類]
         2. 改善のアドバイス: [日本人に対しての改善のアドバイス]
         3. おすすめの練習：[ミニマルペアをおすすめ]
         """
 
     def stream_generator(self, response):
-        # used to save the full response
+        # used to save the full response in a streaming mode
         full_response = ""
         for chunk in response:
             if chunk.text:
@@ -37,13 +38,11 @@ class AIChat:
                 yield new_content
 
     def initial_output(self):
-        if "initial_response" not in st.session_state:
-            response = self.model.generate_content(self.prompt, stream=True)
-            full_response = ""
-            for content in self.stream_generator(response):
-                full_response += content
-            st.session_state.initial_response = full_response
-
+        response = self.model.generate_content(self.prompt, stream=True)
+        full_response = ""
+        for content in self.stream_generator(response):
+            full_response += content
+        st.session_state.initial_response = full_response
         with st.chat_message("assistant"):
             st.markdown(st.session_state.initial_response)
 

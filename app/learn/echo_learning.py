@@ -308,13 +308,15 @@ def get_audio_from_mic(user, selection) -> str:
 def main():
     if st.session_state.user is None:
         st.warning("No user is logined! Something wrong happened!")
+    # reset the ai_intial_input to None for state control    
+    st.session_state.ai_initial_input = None    
     user = st.session_state.user
     dataset = Dataset(user.name)
     dataset.load_data()
 
     st.title("エコー英語学習システム😆")
     # the layout of the grid structure
-    my_grid = extras_grid(1, [0.2, 0.8], 1, 2, 1, 1, vertical_align="center")
+    my_grid = extras_grid(1, [0.2, 0.8], 1, [0.3, 0.7], 1, 1, vertical_align="center")
     # when using my_grid, we need the help of st to avoid wrong layout
     # we could load only some rows of my_grid, which is a useful trick
 
@@ -344,16 +346,24 @@ def main():
     with open(dataset.path + selected_lessons["text"], "r") as f:
         text_content = f.read()
     # TODO: how to set the font and size?
-    my_grid.markdown(text_content)
+    my_grid.markdown(
+        f"""
+        <div style="text-align: left; font-size: 24px; font-weight: bold; color: #F0F0F0;">
+            {text_content}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # row3: mic and learning button
     # main work will be done here
     # initialize all the elements with None for convenience
     overall_score = radar_chart = waveform_plot = error_table = syllable_table = None
-
+    
     with my_grid.container(height=150,border=False):
         audio_file_name = get_audio_from_mic(user, selection)
-    if audio_file_name:
+    # if overall_score and all the other are all None, don't run this
+    if audio_file_name and not overall_score:
         try:
             pronunciation_result = pronunciation_assessment(
                 audio_file=audio_file_name, reference_text=text_content
@@ -370,10 +380,14 @@ def main():
             )
             error_table = create_error_table(pronunciation_result)
             syllable_table = create_syllable_table(pronunciation_result)
-
-            # save the essential information to st.session_state to pass to AI chatbox
-            st.session_state.error_table = error_table
-
+            
+            st.session_state['learning_data']['overall_score'] = overall_score
+            st.session_state['learning_data']['radar_chart'] = radar_chart
+            st.session_state['learning_data']['waveform_plot'] = waveform_plot
+            st.session_state['learning_data']['error_table'] = error_table
+            st.session_state['learning_data']['syllable_table'] = syllable_table
+            # the data sent to ai as initial input
+            st.session_state['ai_initial_input'] = error_table
         except Exception as e:
             st.error(f"エラーが発生しました: {str(e)}")
             st.error(
@@ -381,27 +395,26 @@ def main():
             )
             print(traceback.format_exc())
     # row4: radar chart and errors' type
-    if radar_chart:
-        my_grid.pyplot(radar_chart)
-    if error_table is not None:
-        my_grid.dataframe(error_table)
+    if st.session_state['learning_data']['radar_chart']:
+        my_grid.pyplot(st.session_state['learning_data']['radar_chart'])
+    if st.session_state['learning_data']['error_table'] is not None:
+        my_grid.dataframe(st.session_state['learning_data']['error_table'], use_container_width=True)
     # row5: waveform
-    if waveform_plot:
-        my_grid.pyplot(waveform_plot)
+    if st.session_state['learning_data']['waveform_plot']:
+        my_grid.pyplot(st.session_state['learning_data']['waveform_plot'])
     # row6: summarization of syllable mistakes and feedback of AI
-    if syllable_table:
-        my_grid.markdown(syllable_table, unsafe_allow_html=True)
+    if st.session_state['learning_data']['syllable_table']:
+        my_grid.markdown(st.session_state['learning_data']['syllable_table'], unsafe_allow_html=True)
     
     # if overall score is higher than 80, rain the balloons
     if overall_score and overall_score['PronScore'] >= 80:
         rain(
-            emoji="🥳🎉",
-            font_size=54,
-            falling_speed=5,
-            animation_length=10,
-        )
+        emoji="🥳🎉",
+        font_size=54,
+        falling_speed=5,
+        animation_length=10
+    )
 
 
-if __name__ == "__main__":
+with st.spinner("ロード中..."):
     main()
-main()
