@@ -15,12 +15,13 @@ from dataset import Dataset
 from datetime import datetime
 import traceback
 from streamlit_extras.let_it_rain import rain
+from streamlit_extras.image_coordinates import streamlit_image_coordinates
 
 import sys
 import os
 
 # Ensure the tools directory is in the Python path
-sys.path.append(os.path.abspath("app/tools"))
+sys.path.append(os.path.abspath("app/tools"))	
 
 # Initialize global variables for storing radar chart per attempt and error types
 plt.rcParams["font.family"] = "MS Gothic"

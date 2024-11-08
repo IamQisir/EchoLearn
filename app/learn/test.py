@@ -1,13 +1,12 @@
-import pandas as pd
+import streamlit as st
+from streamlit_extras.image_coordinates import streamlit_image_coordinates
+import random
 
-error_types = {
-        "省略 (Omission)": {'個数': 0, '単語': []},  # Omission
-        "挿入 (Insertion)": {'個数': 0, '単語': []},  # Insertion
-        "発音ミス (Mispronunciation)": {'個数': 0, '単語': []},  # Mispronunciation
-        "不適切な間 (UnexpectedBreak)": {'個数': 0, '単語': []},  # UnexpectedBreak
-        "間の欠如 (MissingBreak)": {'個数': 0, '単語': []},  # MissingBreak
-        "単調 (Monotone)": {'個数': 0, '単語': []},  # Monotone
-    }
+def example():
+    "# Click on the image"
+    last_coordinates = streamlit_image_coordinates("./logo/EchoLearn.png")
 
-df = pd.DataFrame.from_dict(error_types, orient='index')
-print(df.loc['省略 (Omission)', '個数'])
+    st.write(last_coordinates)
+
+example()
+st.write(f"Hey! There is a random number: {random.random()}")
