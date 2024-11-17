@@ -344,7 +344,7 @@ def main():
 
     # row2: video, text
     my_grid.video(dataset.path + selected_lessons["video"])
-    with open(dataset.path + selected_lessons["text"], "r") as f:
+    with open(dataset.path + selected_lessons["text"], "r", encoding='utf-8') as f:
         text_content = f.read()
     # TODO: how to set the font and size?
     my_grid.markdown(

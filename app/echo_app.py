@@ -90,15 +90,18 @@ def register():
             unsafe_allow_html=True,
         )
     st.markdown("# 新規登録して利用できます! 😉")
-    new_username = st.text_input("ユーザー名", key="new_username")
-    new_password = st.text_input("パスワード", key="new_password", type="password")
-    if st.button("新規登録"):
-        new_user = User.register(new_username, new_password)
-        if new_user:
-            sleep(2)
-            # initialize learning_data in st.session_state
-            global login_page
-            st.switch_page(login_page)
+    with st.form(key='register_form'):
+        username = st.text_input("ユーザー名", key="username")
+        password = st.text_input("パスワード", key="password", type="password")
+        submit_button = st.form_submit_button(label='新規登録')
+
+        if submit_button:
+            user = User.register(username, password)
+            if user:
+                sleep(2)
+                # initialize learning_data in st.session_state
+                global login_page
+                st.switch_page(login_page)
 
 def logout():
     # After logging out, delete all the keys of st.session_state
