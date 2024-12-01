@@ -19,7 +19,6 @@ from streamlit_extras.image_coordinates import streamlit_image_coordinates
 
 import sys
 import os
-
 # Ensure the tools directory is in the Python path
 sys.path.append(os.path.abspath("app/tools"))	
 
@@ -275,7 +274,11 @@ def create_syllable_table(pronunciation_result):
     output += "</table>"
     return output
 
+@DeprecationWarning
 def get_audio_from_mic(user, selection) -> str:
+    """
+    This function uses audio_recorder as recorder
+    """
     # record audio from mic and save it to a wav file, and return the name of the file
     sample_rate = 16000
 
@@ -296,8 +299,6 @@ def get_audio_from_mic(user, selection) -> str:
         text="クリックして録音", neutral_color="#e6ff33", sample_rate=16000
     )
     if audio_bytes:
-        # save audio_bytes to a file
-        st.audio(audio_bytes)
         # save io.BytesIO obj into a file whose name is date_time.now()
         # save the wav in a mono channel for Azure pronunciation assessment
         file_name = f"{user.today_path}/{selection}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.wav"

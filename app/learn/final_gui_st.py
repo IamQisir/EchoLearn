@@ -1,6 +1,5 @@
 import io
 import os
-import base64
 import json
 import librosa
 import time
@@ -8,39 +7,53 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
-import google.generativeai as genai
 import soundfile as sf
 import azure.cognitiveservices.speech as speechsdk
 from audio_recorder_streamlit import audio_recorder
-from streamlit_extras.row import row as extras_row
+from streamlit_extras.grid import grid as extras_grid
+from dataset import Dataset
+from datetime import datetime
+import traceback
+from streamlit_extras.let_it_rain import rain
+from streamlit_extras.image_coordinates import streamlit_image_coordinates
 
 import sys
 import os
 # Ensure the tools directory is in the Python path
-sys.path.append(os.path.abspath('app/tools'))
-
-# Correct the import statement
-# from avatar_synthesis import generate_avatar_video
-
+sys.path.append(os.path.abspath("app/tools"))	
 
 # Initialize global variables for storing radar chart per attempt and error types
 plt.rcParams["font.family"] = "MS Gothic"
 
-# Obtain your API key from the Google AI Studio
-genai.configure(api_key=st.secrets['Gemini']['GOOGLE_API_KEY'])
-model = genai.GenerativeModel("gemini-pro")
 
-
-# Function to get color based on score
 def get_color(score):
-    if score >= 90:
-        return "#00ff00"
-    elif score >= 75:
-        return "#ffff00"
-    elif score >= 50:
-        return "#ffa500"
-    else:
-        return "#ff0000"
+    """
+    Convert score to a continuous heatmap color
+    Args:
+        score (float): Score value between 0-100
+    Returns:
+        str: Color in hex format
+    """
+    # Ensure score is between 0-100
+    score = np.clip(score, 0, 100)
+    
+    # Normalize score to 0-1 range
+    normalized_score = score / 100.0
+    
+    # Use RdYlGn colormap (Red-Yellow-Green)
+    cmap = plt.cm.RdYlGn
+    
+    # Get RGB color values 
+    rgb = cmap(normalized_score)
+    
+    # Convert RGB to hex format (exclude alpha channel)
+    hex_color = '#{:02x}{:02x}{:02x}'.format(
+        int(rgb[0]*255),
+        int(rgb[1]*255),
+        int(rgb[2]*255)
+    )
+    
+    return hex_color
 
 
 # Function to create radar chart
@@ -122,13 +135,15 @@ def create_waveform_plot(audio_file, pronunciation_result):
                 phoneme_duration = phoneme["Duration"] / 10000000
                 phoneme_end = phoneme_start + phoneme_duration
 
-                phoneme_score = phoneme["PronunciationAssessment"].get("AccuracyScore", 0)
+                phoneme_score = phoneme["PronunciationAssessment"].get(
+                    "AccuracyScore", 0
+                )
                 phoneme_color = get_color(phoneme_score)
 
                 # 绘制音节的垂直线
                 # ax.axvline(x=phoneme_start, color='black', linestyle='--', alpha=0.5)
                 # ax.axvline(x=phoneme_end, color='black', linestyle='--', alpha=0.5)
-                
+
                 # 添加音节 Phoneme 标签
                 ax.text(
                     phoneme_start,
@@ -137,7 +152,7 @@ def create_waveform_plot(audio_file, pronunciation_result):
                     ha="left",
                     va="top",
                     fontsize=6,
-                    color = phoneme_color
+                    color=phoneme_color,
                 )
         ax.axvline(x=end_time, color="gray", linestyle="--", alpha=0.5)
 
@@ -152,7 +167,10 @@ def pronunciation_assessment(audio_file, reference_text):
     print("進入 pronunciation_assessment 関数")
 
     # Be Aware!!! We are using free keys here but nonfree keys in Avatar
-    speech_key, service_region = st.secrets['Azure_Speech']['SPEECH_KEY'], st.secrets['Azure_Speech']['SPEECH_REGION']
+    speech_key, service_region = (
+        st.secrets["Azure_Speech"]["SPEECH_KEY"],
+        st.secrets["Azure_Speech"]["SPEECH_REGION"],
+    )
     print(f"SPEECH_KEY: {speech_key}, SPEECH_REGION: {service_region}")
 
     speech_config = speechsdk.SpeechConfig(
@@ -192,183 +210,46 @@ def pronunciation_assessment(audio_file, reference_text):
     except Exception as e:
         st.error(f"pronunciation_assessment 関数で例外をキャッチしました: {str(e)}")
         import traceback
-
         st.error(traceback.format_exc())
         raise
 
-
-# Function to create error statistics table
-def create_error_table(pronunciation_result):
-    error_types = {
-        "省略 (Omission)": 0,  # Omission
-        "挿入 (Insertion)": 0,  # Insertion
-        "発音ミス (Mispronunciation)": 0,  # Mispronunciation
-        "不適切な間 (UnexpectedBreak)": 0,  # UnexpectedBreak
-        "間の欠如 (MissingBreak)": 0,  # MissingBreak
-        "単調 (Monoton)": 0,  # Monoton
-    }
-
-    words = pronunciation_result["NBest"][0]["Words"]
-    for word in words:
-        if (
-            "PronunciationAssessment" in word
-            and "ErrorType" in word["PronunciationAssessment"]
-        ):
-            error_type = word["PronunciationAssessment"]["ErrorType"]
-            if error_type == "Omission":
-                error_types["省略 (Omission)"] += 1
-            elif error_type == "Insertion":
-                error_types["挿入 (Insertion)"] += 1
-            elif error_type == "Mispronunciation":
-                error_types["発音ミス (Mispronunciation)"] += 1
-            elif error_type == "UnexpectedBreak":
-                error_types["不適切な間 (UnexpectedBreak)"] += 1
-            elif error_type == "MissingBreak":
-                error_types["間の欠如 (MissingBreak)"] += 1
-            elif error_type == "Monoton":
-                error_types["単調 (Monoton)"] += 1
-
-    # Create DataFrame
-    df = pd.DataFrame(list(error_types.items()), columns=["エラータイプ", "回数"])
-    return df
-
-
-def create_syllable_table(pronunciation_result):
-    output = """
-    <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid black; padding: 8px; text-align: left; }
-        th { background-color: #00008B; }
-    </style>
-    <table>
-        <tr><th>Word</th><th>Pronunciation</th><th>Score</th></tr>
-    """
-    for word in pronunciation_result["NBest"][0]["Words"]:
-        word_text = word["Word"]
-        accuracy_score = word.get("PronunciationAssessment", {}).get("AccuracyScore", 0)
-        color = get_color(accuracy_score)
-
-        output += f"<tr><td>{word_text}</td><td>"
-
-        if "Phonemes" in word:
-            for phoneme in word["Phonemes"]:
-                phoneme_text = phoneme["Phoneme"]
-                phoneme_score = phoneme.get("PronunciationAssessment", {}).get(
-                    "AccuracyScore", 0
-                )
-                phoneme_color = get_color(phoneme_score)
-                output += f"<span style='color: {phoneme_color};'>{phoneme_text}</span>"
-        else:
-            output += word_text
-
-        output += f"</td><td style='background-color: {color};'>{accuracy_score:.2f}</td></tr>"
-
-    output += "</table>"
-    return output
-
-# Function to respond to chatbot
-def ai_respond(message, chat_history):
-    bot_message = model.generate_content(message).text
-    chat_history.append((message, bot_message))
-    time.sleep(0.5)
-    return chat_history
-
-# TODO: get_audio_from_mic
-def get_audio_from_mic():
-    audio_bytes = audio_recorder(neutral_color="#e6ff33", sample_rate=16000)
-    return None
-
-# page layout
 def main():
-    st.title("エコー英語学習システム")
-    # TODO: Doing!
-    # row1 = extras_row([0.4, 0.4, 0.2])
-    # row1.video()
+    if st.session_state.user is None:
+        st.warning("No user is logined! Something wrong happened!")
+    # reset the ai_intial_input to None for state control    
+    st.session_state.ai_initial_input = None    
+    user = st.session_state.user
+    dataset = Dataset(user.name)
+    dataset.load_data()
 
-    st.markdown("音声をアップロードするか、マイクで録音して発音を評価します。")
+    st.title("エコー英語学習システム😆")
+    # the layout of the grid structure
+    my_grid = extras_grid(1, [0.2, 0.8], 1, [0.3, 0.7], 1, 1, vertical_align="center")
+    # when using my_grid, we need the help of st to avoid wrong layout
+    # we could load only some rows of my_grid, which is a useful trick
 
-    input_text = st.text_input(
-        "勉強しよう！", "Hello, I am Echo English Trainer. How can I help you?"
-    )
-    audio_file = st.file_uploader("音声入力", type=["wav", "mp3"])
-
-    if st.button("学習開始！"):
-        if audio_file is not None:
-            # Save uploaded file temporarily
-            with open("temp_audio.wav", "wb") as f:
-                f.write(audio_file.getvalue())
-
-            try:
-                # Resample the audio to 16kHz
-                y, sr = librosa.load("temp_audio.wav", sr=16000)
-                sf.write("resampled_audio.wav", y, sr)
-
-                # Perform pronunciation assessment
-                pronunciation_result = pronunciation_assessment(
-                    "resampled_audio.wav", input_text
-                )
-                # TODO: save this result to file
-                # st.write(pronunciation_result)
-
-                overall_score = pronunciation_result["NBest"][0][
-                    "PronunciationAssessment"
-                ]
-
-                # Create and display radar chart
-                radar_chart = create_radar_chart(pronunciation_result)
-                st.pyplot(radar_chart)
-
-                # Create and display waveform plot
-                waveform_plot = create_waveform_plot(
-                    "resampled_audio.wav", pronunciation_result
-                )
-                st.pyplot(waveform_plot)
-
-                # Create and display error table
-                error_table = create_error_table(pronunciation_result)
-                st.dataframe(error_table)
-
-                # Create and display syllable table
-                syllable_table = create_syllable_table(pronunciation_result)
-                st.markdown(syllable_table, unsafe_allow_html=True)
-
-                # Generate and display avatar video
-                # avatar_video = generate_avatar_video(input_text)
-                # st.video(avatar_video)
-
-            except Exception as e:
-                st.error(f"エラーが発生しました: {str(e)}")
-                st.error(
-                    "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
-                )
-
-            finally:
-                # Clean up temporary files
-                for file in ["temp_audio.wav", "resampled_audio.wav"]:
-                    if os.path.exists(file):
-                        os.remove(file)
-        else:
-            st.warning("音声ファイルをアップロードしてください。")
-
-    # Chat interface
-    st.header("英語学習コンサルタント")
-    if "chat_history" not in st.session_state:
-        st.session_state.chat_history = []
-
-    for message in st.session_state.chat_history:
-        st.text(f"You: {message[0]}")
-        st.text(f"AI: {message[1]}")
-
-    user_input = st.text_input("質問欄")
-    if st.button("送信"):
-        st.session_state.chat_history = ai_respond(
-            user_input, st.session_state.chat_history
+    # row1: selectbox and blank
+    # TODO: should make the selectionbox more efficient
+    @st.fragment
+    def learning_header():
+        selection = my_grid.selectbox(
+        "レッソンを選ぶ", ["レッソン1", "レッソン2", "レッソン3"]
         )
-
-    if st.button("チャットをリセット"):
-        st.session_state.chat_history = []
-
-
-if __name__ == "__main__":
+        if selection == "レッソン1":
+            selected_lessons = {
+                "text": dataset.text_data[0],
+                "video": dataset.video_data[0],
+            }
+        elif selection == "レッソン2":
+            selected_lessons = {
+                "text": dataset.text_data[1],
+                "video": dataset.video_data[1],
+            }
+        elif selection == "レッソン3":
+            selected_lessons = {
+                "text": dataset.text_data[2],
+                "video": dataset.video_data[2],
+            }
+            
+with st.spinner("ロード中..."):
     main()
-main()
