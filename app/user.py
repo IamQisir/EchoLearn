@@ -27,6 +27,9 @@ class User:
         self.today_path = self.practice_history_path + f"{str(date.today())}/"
         if not os.path.exists(self.today_path):
             os.makedirs(self.today_path, exist_ok=False)
+    
+    def __hash__(self):
+        return hash(self.name)
 
     def save_to_user_info(self) -> None:
         # update the user_info like registering a new user

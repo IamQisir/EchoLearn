@@ -305,6 +305,32 @@ def get_audio_from_mic(user, selection) -> str:
         
         return file_name
 
+# TODO: Even within the form, the audio will be saved a lot of times
+def get_audio_from_mic_v2(user, selection) -> str:
+    # record audio from mic and save it to a wav file, and return the name of the file
+    # user is an obj of User and selection is the name of selected lession
+    def save_audio_bytes_to_wav(
+        audio_bytes, output_filename, sample_rate=48000, channels=1
+    ):
+        # Convert audio_bytes to a numpy array
+        audio_data, sr = sf.read(audio_bytes, dtype="int16")
+        # Save the numpy array to a .wav file
+        sf.write(
+            output_filename, audio_data, sample_rate, format="WAV", subtype="PCM_16"
+        )
+        print("audio has been saved!")
+
+    # collect voice bytes data from audio_recorder
+    # st.audio_input will return a subclass of io.BytesIO
+    # the default sampling rate of st.audio_input is 48000Hz
+    audio_bytes_io = st.audio_input("クリックして録音しろう！")
+    if audio_bytes_io:
+        # save io.BytesIO obj into a file whose name is date_time.now()
+        # save the wav in a mono channel for Azure pronunciation assessment
+        file_name = f"{user.today_path}/{selection}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.wav"
+        save_audio_bytes_to_wav(audio_bytes_io, file_name, sample_rate=48000, channels=1)
+        return file_name
+
 # layout of learning page
 def main():
     if st.session_state.user is None:
@@ -316,106 +342,118 @@ def main():
     dataset.load_data()
 
     st.title("エコー英語学習システム😆")
-    # the layout of the grid structure
-    my_grid = extras_grid(1, [0.2, 0.8], 1, [0.3, 0.7], 1, 1, vertical_align="center")
-    # when using my_grid, we need the help of st to avoid wrong layout
-    # we could load only some rows of my_grid, which is a useful trick
-
-    # row1: selectbox and blank
-    # TODO: should make the selectionbox more efficient
-    selection = my_grid.selectbox(
-        "レッソンを選ぶ", ["レッソン1", "レッソン2", "レッソン3"]
-    )
-    if selection == "レッソン1":
-        selected_lessons = {
-            "text": dataset.text_data[0],
-            "video": dataset.video_data[0],
-        }
-    elif selection == "レッソン2":
-        selected_lessons = {
-            "text": dataset.text_data[1],
-            "video": dataset.video_data[1],
-        }
-    elif selection == "レッソン3":
-        selected_lessons = {
-            "text": dataset.text_data[2],
-            "video": dataset.video_data[2],
-        }
-
-    # row2: video, text
-    my_grid.video(dataset.path + selected_lessons["video"])
-    with open(dataset.path + selected_lessons["text"], "r", encoding='utf-8') as f:
-        text_content = f.read()
-    # TODO: how to set the font and size?
-    my_grid.markdown(
-        f"""
-        <div style="text-align: left; font-size: 24px; font-weight: bold; color: #F0F0F0;">
-            {text_content}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # row3: mic and learning button
-    # main work will be done here
-    # initialize all the elements with None for convenience
-    overall_score = radar_chart = waveform_plot = error_table = syllable_table = None
     
-    with my_grid.container(height=150,border=False):
-        audio_file_name = get_audio_from_mic(user, selection)
-    # if overall_score and all the other are all None, don't run this
-    if audio_file_name and not overall_score:
-        try:
-            pronunciation_result = pronunciation_assessment(
-                audio_file=audio_file_name, reference_text=text_content
-            )
-            # save the pronunciation_result to disk
-            user.save_pron_history(selection, pronunciation_result)
+    # set the names of tabs
+    tab1, tab2 = st.tabs(['ラーニング', 'まとめ'])
+    with tab1:
+        # the layout of the grid structure
+        my_grid = extras_grid(1, [0.2, 0.8], 1,  [0.3, 0.7], 1, 1, vertical_align="center")
+        # when using my_grid, we need the help of st to avoid wrong layout
+        # we could load only some rows of my_grid, which is a useful trick
 
-            overall_score = pronunciation_result["NBest"][0][
-                "PronunciationAssessment"
-            ]
-            radar_chart = create_radar_chart(pronunciation_result)
-            waveform_plot = create_waveform_plot(
-                audio_file_name, pronunciation_result
-            )
-            error_table = create_error_table(pronunciation_result)
-            syllable_table = create_syllable_table(pronunciation_result)
-            
-            st.session_state['learning_data']['overall_score'] = overall_score
-            st.session_state['learning_data']['radar_chart'] = radar_chart
-            st.session_state['learning_data']['waveform_plot'] = waveform_plot
-            st.session_state['learning_data']['error_table'] = error_table
-            st.session_state['learning_data']['syllable_table'] = syllable_table
-            # the data sent to ai as initial input
-            st.session_state['ai_initial_input'] = error_table
-        except Exception as e:
-            st.error(f"エラーが発生しました: {str(e)}")
-            st.error(
-                "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
-            )
-            print(traceback.format_exc())
-    # row4: radar chart and errors' type
-    if st.session_state['learning_data']['radar_chart']:
-        my_grid.pyplot(st.session_state['learning_data']['radar_chart'])
-    if st.session_state['learning_data']['error_table'] is not None:
-        my_grid.dataframe(st.session_state['learning_data']['error_table'], use_container_width=True)
-    # row5: waveform
-    if st.session_state['learning_data']['waveform_plot']:
-        my_grid.pyplot(st.session_state['learning_data']['waveform_plot'])
-    # row6: summarization of syllable mistakes and feedback of AI
-    if st.session_state['learning_data']['syllable_table']:
-        my_grid.markdown(st.session_state['learning_data']['syllable_table'], unsafe_allow_html=True)
+        # row1: selectbox and blank
+        # TODO: should make the selectionbox more efficient
+        selection = my_grid.selectbox(
+            "レッソンを選ぶ", ["レッソン1", "レッソン2", "レッソン3"]
+        )
+        if selection == "レッソン1":
+            selected_lessons = {
+                "text": dataset.text_data[0],
+                "video": dataset.video_data[0],
+            }
+        elif selection == "レッソン2":
+            selected_lessons = {
+                "text": dataset.text_data[1],
+                "video": dataset.video_data[1],
+            }
+        elif selection == "レッソン3":
+            selected_lessons = {
+                "text": dataset.text_data[2],
+                "video": dataset.video_data[2],
+            }
+
+        # row2: video, text
+        my_grid.video(dataset.path + selected_lessons["video"])
+        with open(dataset.path + selected_lessons["text"], "r", encoding='utf-8') as f:
+            text_content = f.read()
+        # TODO: how to set the font and size?
+        my_grid.markdown(
+            f"""
+            <div style="text-align: left; font-size: 24px; font-weight: bold; color: #F0F0F0;">
+                {text_content}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # row3: mic and learning button
+        # main work will be done here
+        # initialize all the elements with None for convenience
+        overall_score = radar_chart = waveform_plot = error_table = syllable_table = None
+        
+        # using form here!
+        with my_grid.form(key='learning_phase'):
+            audio_file_name = get_audio_from_mic_v2(user, selection)
+            if_started = st.form_submit_button('学習開始！')
+        if if_started:
+            # if overall_score and all the other are all None, don't run this
+            if audio_file_name and not overall_score:
+                try:
+                    pronunciation_result = pronunciation_assessment(
+                        audio_file=audio_file_name, reference_text=text_content
+                    )
+                    # save the pronunciation_result to disk
+                    user.save_pron_history(selection, pronunciation_result)
+
+                    overall_score = pronunciation_result["NBest"][0][
+                        "PronunciationAssessment"
+                    ]
+                    radar_chart = create_radar_chart(pronunciation_result)
+                    waveform_plot = create_waveform_plot(
+                        audio_file_name, pronunciation_result
+                    )
+                    error_table = create_error_table(pronunciation_result)
+                    syllable_table = create_syllable_table(pronunciation_result)
+                    
+                    st.session_state['learning_data']['overall_score'] = overall_score
+                    st.session_state['learning_data']['radar_chart'] = radar_chart
+                    st.session_state['learning_data']['waveform_plot'] = waveform_plot
+                    st.session_state['learning_data']['error_table'] = error_table
+                    st.session_state['learning_data']['syllable_table'] = syllable_table
+                    # the data sent to ai as initial input
+                    st.session_state['ai_initial_input'] = error_table
+                except Exception as e:
+                    st.error(f"エラーが発生しました: {str(e)}")
+                    st.error(
+                        "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
+                    )
+                    print(traceback.format_exc())
+        # row4: radar chart and errors' type
+        if st.session_state['learning_data']['radar_chart']:
+            my_grid.pyplot(st.session_state['learning_data']['radar_chart'])
+        if st.session_state['learning_data']['error_table'] is not None:
+            my_grid.dataframe(st.session_state['learning_data']['error_table'], use_container_width=True)
+        # row5: waveform
+        if st.session_state['learning_data']['waveform_plot']:
+            my_grid.pyplot(st.session_state['learning_data']['waveform_plot'])
+        # row6: summarization of syllable mistakes and feedback of AI
+        if st.session_state['learning_data']['syllable_table']:
+            my_grid.markdown(st.session_state['learning_data']['syllable_table'], unsafe_allow_html=True)
+        
+        # if overall score is higher than 80, rain the balloons
+        if overall_score and overall_score['PronScore'] >= 80:
+            rain(
+            emoji="🥳🎉",
+            font_size=54,
+            falling_speed=5,
+            animation_length=10
+        )
     
-    # if overall score is higher than 80, rain the balloons
-    if overall_score and overall_score['PronScore'] >= 80:
-        rain(
-        emoji="🥳🎉",
-        font_size=54,
-        falling_speed=5,
-        animation_length=10
-    )
-
-
-with st.spinner("ロード中..."):
-    main()
+    with tab2:
+        st.write("Today is a good day!")
+        tab2_txt = st.text_input("Please input something")
+        st.write(tab2_txt)
+        audio_data = st.audio_input("Please record")
+        if audio_data:
+            st.audio(audio_data)
+main()
