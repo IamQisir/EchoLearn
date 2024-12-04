@@ -68,6 +68,37 @@ class User:
         new_user.save_to_user_info()
         return new_user
     
+    def load_scores_history(self, lesson_index: int):
+        scores_dir = os.path.join(self.today_path, "scores")
+        json_file = os.path.join(scores_dir, "lesson_scores.json")
+        
+        # Initialize or reset scores history for current lesson
+        if 'scores_history' not in st.session_state:
+            st.session_state.scores_history = {}
+        
+        # Load saved scores if file exists
+        if os.path.exists(json_file):
+            with open(json_file, 'r', encoding='utf-8') as f:
+                all_scores = json.load(f)
+                lesson_key = f"lesson_{lesson_index}"
+                
+                if lesson_key in all_scores:
+                    st.session_state.scores_history[lesson_index] = all_scores[lesson_key]
+                else:
+                    st.session_state.scores_history[lesson_index] = {
+                        'AccuracyScore': [],
+                        'FluencyScore': [],
+                        'CompletenessScore': [],
+                        'PronScore': []
+                    }
+        else:
+            st.session_state.scores_history[lesson_index] = {
+                'AccuracyScore': [],
+                'FluencyScore': [],
+                'CompletenessScore': [],
+                'PronScore': []
+            }
+
     @classmethod
     def login(cls, name:str, password:str):
         if name in User.user_info:
