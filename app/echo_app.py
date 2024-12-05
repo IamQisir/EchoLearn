@@ -116,14 +116,14 @@ logout_page = st.Page(logout, title="ログアウト", icon=":material/logout:")
 
 # Learning-related Page
 learning_page = st.Page("../app/learn/echo_learning.py", title='エコーラーニング', icon="🔥")
-chatbox_page = st.Page("../app/learn/chatbox.py", title='エコー発音先生', icon="🚨")
+# chatbox_page = st.Page("../app/learn/chatbox.py", title='エコー発音先生', icon="🚨")
 
 # Set the navigation of sidebar
 if st.session_state.logged_in:
     pg = st.navigation(
         {
             "アカウント": [logout_page],
-            "ラーニング": [learning_page, chatbox_page],
+            "ラーニング": [learning_page],
         }
     )
 else:

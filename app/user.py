@@ -98,6 +98,31 @@ class User:
                 'CompletenessScore': [],
                 'PronScore': []
             }
+            
+    def load_errors_history(self, lesson_index: int):
+        """Load error history for specified lesson"""
+        scores_dir = os.path.join(self.today_path, "scores")
+        error_file = os.path.join(scores_dir, "error_history.json")
+        
+        # Initialize error history if not exists
+        if 'error_history' not in st.session_state:
+            st.session_state.error_history = {
+                'current_errors': {},
+                'total_errors': {}
+            }
+        
+        # Load saved errors if file exists
+        if os.path.exists(error_file):
+            with open(error_file, 'r', encoding='utf-8') as f:
+                all_errors = json.load(f)
+                lesson_key = f"lesson_{lesson_index}"
+                
+                if lesson_key in all_errors:
+                    st.session_state.error_history['current_errors'] = all_errors[lesson_key]['current']
+                    st.session_state.error_history['total_errors'][lesson_index] = all_errors[lesson_key]['total']
+                else:
+                    st.session_state.error_history['current_errors'] = {}
+                    st.session_state.error_history['total_errors'][lesson_index] = {}
 
     @classmethod
     def login(cls, name:str, password:str):

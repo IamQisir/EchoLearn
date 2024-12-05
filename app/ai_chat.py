@@ -9,23 +9,42 @@ class AIChat:
         self.model = genai.GenerativeModel("gemini-pro")
         self.prompt = ""
 
-    def set_prompt(self, df):
-        # set initial prompt
-        self.prompt = f"""
-        あなたは発音の先生です。以下の発音エラーのリストを基に、各単語の正しい発音と改善のためのアドバイスを提供してください。
-        発音エラーの統計 [エラータイプ、回数、単語]:
-        - 省略 (Omission): 回数: {df.loc['省略 (Omission)', '回数']}, 単語リスト: {df.loc['省略 (Omission)', '単語']}
-        - 挿入 (Insertion): 回数: {df.loc['挿入 (Insertion)', '回数']}, 単語リスト: {df.loc['挿入 (Insertion)', '単語']}
-        - 発音ミス (Mispronunciation): 回数: {df.loc['発音ミス (Mispronunciation)', '回数']}, 単語リスト: {df.loc['発音ミス (Mispronunciation)', '単語']}
-        - 不適切な間 (UnexpectedBreak): 回数: {df.loc['不適切な間 (UnexpectedBreak)', '回数']}, 単語リスト: {df.loc['不適切な間 (UnexpectedBreak)', '単語']}
-        - 間の欠如 (MissingBreak): 回数: {df.loc['間の欠如 (MissingBreak)', '回数']}, 単語リスト: {df.loc['間の欠如 (MissingBreak)', '単語']}
-        - 単調 (Monotone): 回数: {df.loc['単調 (Monotone)', '回数']}, 単語リスト: {df.loc['単調 (Monotone)', '単語']}
+    def set_prompt(self, error_data):
+        """Generate conversational prompt for Gemini API"""
+        base_prompt = """
+        You are a friendly and supportive English pronunciation tutor. I've just finished a pronunciation practice session and would like your help improving. Here are my mistakes:
 
-        全ての単語の発音誤りを統計し、発音の改善アドバイスを行う:
-        1. 誤り[番号]: [単語]と[誤りの種類]
-        2. 改善のアドバイス: [日本人に対しての改善のアドバイス]
-        3. おすすめの練習：[ミニマルペアをおすすめ]
+        {error_summary}
+
+        Please act as my personal tutor and:
+        1. 🎯 First, give me encouraging feedback about my practice attempt
+        2. 💡 Explain in a conversational way why these errors might have occurred
+        3. 🗣️ Provide practical examples and demonstrations using simple words
+        4. ✨ Give me 2-3 quick exercises I can try right now to improve
+        5. 🌟 End with an encouraging message for my next practice
+
+        Please keep your response friendly and supportive, as if we're having a face-to-face tutoring session!
         """
+        
+        self.prompt = base_prompt.format(error_summary=error_data)
+    
+    def format_errors_for_gemini(self, current_errors):
+        """Format error data into prompt text"""
+        if not current_errors:
+            return None
+            
+        error_summary = []
+        for error_type, data in current_errors.items():
+            if isinstance(data, dict) and data.get('count', 0) > 0:
+                error_summary.append(
+                    f"I made {data['count']} {error_type} mistakes "
+                    f"with these words: {', '.join(data['words'])}"
+                )
+        
+        if not error_summary:
+            return None
+            
+        return "\n".join(error_summary)
 
     def stream_generator(self, response):
         # used to save the full response in a streaming mode
@@ -37,14 +56,18 @@ class AIChat:
                 time.sleep(0.01)
                 yield new_content
 
-    def initial_output(self):
+    def initial_output(self, error_data):
+        formatted_errors = self.format_errors_for_gemini(error_data)
+        if not formatted_errors:
+            return None
+        self.set_prompt(formatted_errors)
+
         response = self.model.generate_content(self.prompt, stream=True)
         full_response = ""
         for content in self.stream_generator(response):
             full_response += content
         st.session_state.initial_response = full_response
-        with st.chat_message("assistant"):
-            st.markdown(st.session_state.initial_response)
+        return full_response
 
 # Example usage in Streamlit app
 def main():

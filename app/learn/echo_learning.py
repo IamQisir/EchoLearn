@@ -16,6 +16,7 @@ from datetime import datetime
 import traceback
 from streamlit_extras.let_it_rain import rain
 import altair as alt
+from ai_chat import AIChat
 
 import sys
 import os
@@ -33,10 +34,10 @@ def get_color(score):
         return "#00ff00"
     elif score >= 75:
         # yellow
-        return "#ffff00"
+        return "#ffc000"
     elif score >= 50:
         # orange
-        return "#ffa500"
+        return "#ff4b4b"
     else:
         # red
         return "#ff0000"
@@ -199,48 +200,165 @@ def pronunciation_assessment(audio_file, reference_text):
         st.error(traceback.format_exc())
         raise
 
-
-# Function to create error statistics table
-def create_error_table(pronunciation_result):
-    error_types = {
-        "省略 (Omission)": {'回数': 0, '単語': []},  # Omission
-        "挿入 (Insertion)": {'回数': 0, '単語': []},  # Insertion
-        "発音ミス (Mispronunciation)": {'回数': 0, '単語': []},  # Mispronunciation
-        "不適切な間 (UnexpectedBreak)": {'回数': 0, '単語': []},  # UnexpectedBreak
-        "間の欠如 (MissingBreak)": {'回数': 0, '単語': []},  # MissingBreak
-        "単調 (Monotone)": {'回数': 0, '単語': []},  # Monotone
+def collect_errors(pronunciation_result):
+    """Base function to collect error statistics and words"""
+    error_data = {
+        "省略 (Omission)": {'count': 0, 'words': []},
+        "挿入 (Insertion)": {'count': 0, 'words': []},
+        "発音ミス (Mispronunciation)": {'count': 0, 'words': []},
+        "不適切な間 (UnexpectedBreak)": {'count': 0, 'words': []},
+        "間の欠如 (MissingBreak)": {'count': 0, 'words': []},
+        "単調 (Monotone)": {'count': 0, 'words': []}
     }
-
+    
+    error_mapping = {
+        "Omission": "省略 (Omission)",
+        "Insertion": "挿入 (Insertion)",
+        "Mispronunciation": "発音ミス (Mispronunciation)",
+        "UnexpectedBreak": "不適切な間 (UnexpectedBreak)",
+        "MissingBreak": "間の欠如 (MissingBreak)",
+        "Monotone": "単調 (Monotone)"
+    }
+    
     words = pronunciation_result["NBest"][0]["Words"]
     for word in words:
-        if (
-            "PronunciationAssessment" in word
-            and "ErrorType" in word["PronunciationAssessment"]
-        ):
+        if "PronunciationAssessment" in word and "ErrorType" in word["PronunciationAssessment"]:
             error_type = word["PronunciationAssessment"]["ErrorType"]
-            if error_type == "Omission":
-                error_types["省略 (Omission)"]["回数"] += 1
-                error_types["省略 (Omission)"]["単語"].append(word["Word"])
-            elif error_type == "Insertion":
-                error_types["挿入 (Insertion)"]["回数"] += 1
-                error_types["挿入 (Insertion)"]["単語"].append(word["Word"])
-            elif error_type == "Mispronunciation":
-                error_types["発音ミス (Mispronunciation)"]["回数"] += 1
-                error_types["発音ミス (Mispronunciation)"]["単語"].append(word["Word"])
-            elif error_type == "UnexpectedBreak":
-                error_types["不適切な間 (UnexpectedBreak)"]["回数"] += 1
-                error_types["不適切な間 (UnexpectedBreak)"]["単語"].append(word["Word"])
-            elif error_type == "MissingBreak":
-                error_types["間の欠如 (MissingBreak)"]["回数"] += 1
-                error_types["間の欠如 (MissingBreak)"]["単語"].append(word["Word"])
-            elif error_type == "Monoton":
-                error_types["単調 (Monotone)"]["回数"] += 1
-                error_types["単調 (Monotone)"]["単語"].append(word["Word"])
+            if error_type and error_type in error_mapping:
+                jp_error = error_mapping[error_type]
+                error_data[jp_error]['count'] += 1
+                error_data[jp_error]['words'].append(word["Word"])
+    
+    return error_data
 
-    # Create DataFrame
-    df = pd.DataFrame.from_dict(error_types, orient='index')
+# Function to create error statistics table
+def create_error_table():
+    """Create error table from session state"""
+    if 'current_errors' not in st.session_state:
+        return pd.DataFrame()
+    
+    # Convert to DataFrame
+    df = pd.DataFrame.from_dict(st.session_state.current_errors, orient='index')
     return df
 
+def get_error_stats():
+    """Get error statistics from current session state"""
+    if (
+        'learning_state' not in st.session_state or 
+        'current_errors' not in st.session_state.learning_state
+    ):
+        return {}
+    return {k: v['count'] for k, v in st.session_state.learning_state['current_errors'].items() if v['count'] > 0}
+
+def get_total_error_stats():
+    """Get total error statistics from session state"""
+    if (
+        'learning_state' not in st.session_state or 
+        'total_errors' not in st.session_state.learning_state
+    ):
+        return {}
+    lesson_index = st.session_state.lesson_index
+    if lesson_index not in st.session_state.learning_state['total_errors']:
+        return {}
+    return {k: v['count'] for k, v in st.session_state.learning_state['total_errors'][lesson_index].items() if v['count'] > 0}
+
+def create_doughnut_chart(data, title):
+    """Create a doughnut chart using Altair"""
+    # Convert data to DataFrame
+    df = pd.DataFrame(list(data.items()), columns=['Error', 'Count'])
+    
+    return alt.Chart(df).mark_arc(innerRadius=50).encode(
+        theta=alt.Theta(field="Count", type="quantitative"),
+        color=alt.Color(
+            field="Error",
+            type="nominal",
+            scale=alt.Scale(range=['#FF4B4B', '#FFC000', '#00B050', '#2F75B5', '#7030A0', '#000000'])
+        ),
+        tooltip=['Error', 'Count']
+    ).properties(
+        title=title,
+        width=300,
+        height=300
+    )
+
+def convert_to_ipa(pronunciation):
+    """Convert Azure phonemes to IPA symbols"""
+    # Azure phoneme to IPA mapping
+    phoneme_map = {
+        # Vowels
+        'aa': 'ɑ',  # odd
+        'ae': 'æ',  # at
+        'ah': 'ʌ',  # hut
+        'ao': 'ɔ',  # caught
+        'aw': 'aʊ', # how
+        'ax': 'ə',  # about
+        'ay': 'aɪ', # hide
+        'eh': 'ɛ',  # red
+        'er': 'ɝ',  # hurt
+        'ey': 'eɪ', # say
+        'ih': 'ɪ',  # it
+        'iy': 'i',  # eat
+        'ow': 'oʊ', # show
+        'oy': 'ɔɪ', # toy
+        'uh': 'ʊ',  # hood
+        'uw': 'u',  # two
+
+        # Consonants
+        'b': 'b',   # be
+        'ch': 'tʃ', # cheese
+        'd': 'd',   # dee
+        'dh': 'ð',  # thee
+        'f': 'f',   # fee
+        'g': 'g',   # green
+        'hh': 'h',  # he
+        'jh': 'dʒ', # gee
+        'k': 'k',   # key
+        'l': 'l',   # lee
+        'm': 'm',   # me
+        'n': 'n',   # knee
+        'ng': 'ŋ',  # ping
+        'p': 'p',   # pee
+        'r': 'r',   # read
+        's': 's',   # sea
+        'sh': 'ʃ',  # she
+        't': 't',   # tea
+        'th': 'θ',  # thin
+        'v': 'v',   # vee
+        'w': 'w',   # we
+        'y': 'j',   # yield
+        'z': 'z',   # zee
+        'zh': 'ʒ'   # measure
+    }
+
+    # Special combinations and rules
+    special_combinations = {
+        'dx': 'ɾ',  # flap D as in rider
+        'nx': 'ɾ̃',  # winner
+        'el': 'ḷ',  # bottle
+        'em': 'm̩',  # rhythm
+        'en': 'n̩'   # button
+    }
+
+    def convert_phoneme(phoneme):
+        # Try special combinations first
+        if phoneme in special_combinations:
+            return special_combinations[phoneme]
+        # Then try regular phoneme map
+        if phoneme in phoneme_map:
+            return phoneme_map[phoneme]
+        return phoneme  # Return original if no mapping found
+
+    # Split input into phonemes
+    phonemes = pronunciation.strip().split()
+    
+    # Convert each phoneme and join
+    ipa = ' '.join(convert_phoneme(p) for p in phonemes)
+    
+    # Post-processing rules
+    ipa = ipa.replace('ˈ ', 'ˈ')  # Fix stress mark spacing
+    ipa = ipa.replace('ˌ ', 'ˌ')  # Fix secondary stress mark spacing
+    
+    return ipa
 
 def create_syllable_table(pronunciation_result):
     output = """
@@ -261,7 +379,7 @@ def create_syllable_table(pronunciation_result):
 
         if "Phonemes" in word:
             for phoneme in word["Phonemes"]:
-                phoneme_text = phoneme["Phoneme"]
+                phoneme_text = convert_to_ipa(phoneme["Phoneme"])
                 phoneme_score = phoneme.get("PronunciationAssessment", {}).get(
                     "AccuracyScore", 0
                 )
@@ -315,7 +433,7 @@ def save_audio_bytes_to_wav(user, audio_bytes, selection, sample_rate=48000, cha
 
 def get_audio_from_mic_v2(user, selection):
     # Collect voice bytes data from audio_recorder
-    audio_bytes_io = st.audio_input("マイクのアイコンをクリックして、録音しましょう！")
+    audio_bytes_io = st.audio_input("マイクのアイコンをクリックして、録音しましょう！", key='audio_input')
     if audio_bytes_io:
         current_time = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         # Generate filename for new recording
@@ -364,47 +482,116 @@ def save_scores_to_json(user, lesson_index, scores_history):
     
     lesson_key = f"lesson_{lesson_index}"
     
-    # If lesson exists, append new scores to existing lists
-    if lesson_key in all_scores:
-        all_scores[lesson_key]['AccuracyScore'].extend(scores_history['AccuracyScore'])
-        all_scores[lesson_key]['FluencyScore'].extend(scores_history['FluencyScore'])  
-        all_scores[lesson_key]['CompletenessScore'].extend(scores_history['CompletenessScore'])
-        all_scores[lesson_key]['PronScore'].extend(scores_history['PronScore'])
-    else:
-        # Create new entry for lesson
-        all_scores[lesson_key] = {
-            'AccuracyScore': scores_history['AccuracyScore'],
-            'FluencyScore': scores_history['FluencyScore'],
-            'CompletenessScore': scores_history['CompletenessScore'],
-            'PronScore': scores_history['PronScore']
-        }
+    # Create new entry for lesson (overwrite instead of append)
+    all_scores[lesson_key] = {
+        'AccuracyScore': scores_history['AccuracyScore'],
+        'FluencyScore': scores_history['FluencyScore'],
+        'CompletenessScore': scores_history['CompletenessScore'],
+        'PronScore': scores_history['PronScore']
+    }
     
     # Save updated data
     with open(json_file, 'w', encoding='utf-8') as f:
         json.dump(all_scores, f, indent=4)
 
-def store_scores(user, lesson_index, pronunciation_result):
-    # Initialize scores history if not exists
-    if 'scores_history' not in st.session_state:
-        st.session_state.scores_history = {}
+def save_error_history(user, lesson_index, error_data):
+    """Save error history to JSON file"""
+    # Create scores directory if not exists
+    scores_dir = os.path.join(user.today_path, "scores")
+    if not os.path.exists(scores_dir):
+        os.makedirs(scores_dir)
     
-    # Initialize current lesson if not exists
-    if lesson_index not in st.session_state.scores_history:
-        st.session_state.scores_history[lesson_index] = {
+    error_file = os.path.join(scores_dir, "error_history.json")
+    
+    try:
+        # Load existing data if file exists
+        if os.path.exists(error_file):
+            with open(error_file, 'r', encoding='utf-8') as f:
+                all_errors = json.load(f)
+        else:
+            all_errors = {}
+        
+        # Update with new error data
+        lesson_key = f"lesson_{lesson_index}"
+        all_errors[lesson_key] = {
+            'current': error_data['current'],
+            'total': error_data['total']
+        }
+        
+        # Save updated data
+        with open(error_file, 'w', encoding='utf-8') as f:
+            json.dump(all_errors, f, indent=4, ensure_ascii=False)
+            
+    except Exception as e:
+        st.error(f"Error saving error history: {str(e)}")
+
+def store_scores(user, lesson_index, pronunciation_result):
+    """Store scores and update session state"""
+    # Get scores
+    scores = pronunciation_result["NBest"][0]["PronunciationAssessment"]
+    error_data = collect_errors(pronunciation_result)
+    
+    # Initialize session state
+    if 'learning_state' not in st.session_state:
+        st.session_state.learning_state = {
+            'scores_history': {},
+            'current_errors': {},
+            'total_errors': {}
+        }
+    
+    # Initialize lesson data if needed
+    if lesson_index not in st.session_state.learning_state['scores_history']:
+        st.session_state.learning_state['scores_history'][lesson_index] = {
             'AccuracyScore': [],
             'FluencyScore': [],
             'CompletenessScore': [],
             'PronScore': []
         }
+        st.session_state.learning_state['total_errors'][lesson_index] = {}
     
-    # Add new scores
-    scores = pronunciation_result["NBest"][0]["PronunciationAssessment"]
-    st.session_state.scores_history[lesson_index]['AccuracyScore'].append(scores['AccuracyScore'])
-    st.session_state.scores_history[lesson_index]['FluencyScore'].append(scores['FluencyScore'])
-    st.session_state.scores_history[lesson_index]['CompletenessScore'].append(scores['CompletenessScore'])
-    st.session_state.scores_history[lesson_index]['PronScore'].append(scores['PronScore'])
+    # Update scores
+    for score_type in ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'PronScore']:
+        st.session_state.learning_state['scores_history'][lesson_index][score_type].append(
+            scores[score_type]
+        )
+    
+    # Update current errors
+    st.session_state.learning_state['current_errors'] = error_data
+    
+    # Update total errors
+    for error_type, data in error_data.items():
+        if error_type not in st.session_state.learning_state['total_errors'][lesson_index]:
+            st.session_state.learning_state['total_errors'][lesson_index][error_type] = {
+                'count': 0, 'words': []
+            }
+        st.session_state.learning_state['total_errors'][lesson_index][error_type]['count'] += data['count']
+        st.session_state.learning_state['total_errors'][lesson_index][error_type]['words'].extend(data['words'])
+    
+    # Save to files
+    save_scores_to_json(user, lesson_index, st.session_state.learning_state['scores_history'][lesson_index])
+    save_error_history(user, lesson_index, {
+        'current': error_data,
+        'total': st.session_state.learning_state['total_errors'][lesson_index]
+    })
+    
+    # Add this line to force reload the scores
+    user.load_scores_history(lesson_index)
 
-    save_scores_to_json(user, lesson_index, st.session_state.scores_history[lesson_index])
+def plot_error_charts():
+    """Plot both current and total error charts"""
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        current_errors = get_error_stats()
+        if current_errors:
+            current_chart = create_doughnut_chart(current_errors, '今回の発音エラー')
+            st.altair_chart(current_chart, use_container_width=True)
+    
+    with col2:
+        total_errors = get_total_error_stats()
+        if total_errors:
+            total_chart = create_doughnut_chart(total_errors, 'レッスン総合エラー')
+            st.altair_chart(total_chart, use_container_width=True)
 
 def plot_overall_score(data):
     """Plot overall pronunciation score"""
@@ -525,13 +712,63 @@ def plot_score_history():
         detail_chart = plot_detail_scores(data)
         st.altair_chart(detail_chart, use_container_width=True)
 
+def initialize_lesson_state(user, lesson_index):
+    """Initialize or load lesson state from saved files"""
+    # Check if this is first time initialization
+    if 'learning_state' not in st.session_state:
+        # First time - load everything from files
+        st.session_state.learning_state = {
+            'scores_history': {},
+            'current_errors': {},
+            'total_errors': {}
+        }
+        
+        # Load saved data from files
+        scores_dir = os.path.join(user.today_path, "scores")
+        if os.path.exists(scores_dir):
+            # Load scores
+            scores_file = os.path.join(scores_dir, "lesson_scores.json")
+            if os.path.exists(scores_file):
+                with open(scores_file, 'r', encoding='utf-8') as f:
+                    all_scores = json.load(f)
+                    for lesson_key, scores in all_scores.items():
+                        lesson_idx = int(lesson_key.split('_')[1])
+                        st.session_state.learning_state['scores_history'][lesson_idx] = scores
+            
+            # Load errors
+            error_file = os.path.join(scores_dir, "error_history.json")
+            if os.path.exists(error_file):
+                with open(error_file, 'r', encoding='utf-8') as f:
+                    all_errors = json.load(f)
+                    for lesson_key, errors in all_errors.items():
+                        lesson_idx = int(lesson_key.split('_')[1])
+                        st.session_state.learning_state['total_errors'][lesson_idx] = errors['total']
+    
+    # Initialize current lesson structures if not exist
+    if lesson_index not in st.session_state.learning_state['total_errors']:
+        st.session_state.learning_state['total_errors'][lesson_index] = {}
+        
+    if lesson_index not in st.session_state.learning_state['scores_history']:
+        st.session_state.learning_state['scores_history'][lesson_index] = {
+            'AccuracyScore': [],
+            'FluencyScore': [],
+            'CompletenessScore': [],
+            'PronScore': []
+        }
+
 # layout of learning page
 def main():
     if st.session_state.user is None:
         st.warning("No user is logined! Something wrong happened!")
     # reset the ai_intial_input to None for state control    
-    st.session_state.ai_initial_input = None    
+    st.session_state.ai_initial_input = None 
+    if 'lesson_index' not in st.session_state:
+        st.session_state.lesson_index = 0   
     user = st.session_state.user
+    initialize_lesson_state(user, st.session_state.lesson_index)
+    # Initialize state at the beginning
+    ai_chat = AIChat()
+
     if 'dataset' not in st.session_state:
         dataset = Dataset(user.name)
         dataset.load_data()
@@ -610,24 +847,30 @@ def main():
                     # save the pronunciation_result to disk
                     user.save_pron_history(selection, pronunciation_result)
 
-                    overall_score = pronunciation_result["NBest"][0][
-                        "PronunciationAssessment"
-                    ]
-                    # store the pronunciation results into sesstion_state
+                    overall_score = pronunciation_result["NBest"][0]["PronunciationAssessment"]
+
+                    # store the pronunciation results into session_state
                     store_scores(user, st.session_state.lesson_index, pronunciation_result)
+
+                    # Create visualizations and analysis
                     radar_chart = create_radar_chart(pronunciation_result)
-                    waveform_plot = create_waveform_plot(
-                        audio_file_name, pronunciation_result
-                    )
-                    error_table = create_error_table(pronunciation_result)
+                    waveform_plot = create_waveform_plot(audio_file_name, pronunciation_result)
+
+                    # Process errors - moved collect_errors before create_error_table
+                    error_data = collect_errors(pronunciation_result)
+                    st.session_state.current_errors = error_data
+                    error_table = create_error_table()
+
                     syllable_table = create_syllable_table(pronunciation_result)
-                    
+
+                    # Store results in session state
                     st.session_state['learning_data']['overall_score'] = overall_score
                     st.session_state['learning_data']['radar_chart'] = radar_chart
                     st.session_state['learning_data']['waveform_plot'] = waveform_plot
                     st.session_state['learning_data']['error_table'] = error_table
                     st.session_state['learning_data']['syllable_table'] = syllable_table
-                    # the data sent to ai as initial input
+
+                    # Data for AI
                     st.session_state['ai_initial_input'] = error_table
                 except Exception as e:
                     st.error(f"エラーが発生しました: {str(e)}")
@@ -648,16 +891,31 @@ def main():
             my_grid.markdown(st.session_state['learning_data']['syllable_table'], unsafe_allow_html=True)
         
         # if overall score is higher than 80, rain the balloons
-        if overall_score and overall_score['PronScore'] >= 80:
+        if overall_score and overall_score['PronScore'] >= 90:
             rain(
             emoji="🥳🎉",
             font_size=54,
             falling_speed=5,
-            animation_length=10
+            animation_length=1
         )
     
     with tab2:
         progress_plot = plot_score_history()
         if progress_plot:
             st.pyplot(progress_plot)
+        error_plot = plot_error_charts()
+        if error_plot:
+            st.pyplot(error_plot)
+        # feedback from AI
+
+        with st.chat_message('AI'):
+            if 'learning_state' not in st.session_state or not st.session_state.learning_state['current_errors']:
+                st.write("練習を始めましょう！")
+            elif if_started:
+                st.write("Geminiによる発音のアドバイス:")
+                feedback = ai_chat.initial_output(st.session_state.learning_state['current_errors'])
+                if feedback:
+                    st.write(feedback)
+            else:
+                st.write("まだ頑張りましょう！")
 main()
