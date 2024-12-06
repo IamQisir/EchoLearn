@@ -443,6 +443,7 @@ def get_audio_from_mic_v2(user, selection):
         return audio_bytes_io
     return None
 
+
 def course_navigation(my_grid, courses):
     # my_grid is the grid element of streamlit_exras
     # Initialize session state for course index
@@ -794,24 +795,12 @@ def main():
 
         # row1: selectbox and blank
         selection = course_navigation(my_grid, lessons)
-        # selection = my_grid.selectbox(
-        #     "レッソンを選びましょう！", ["レッソン1", "レッソン2", "レッソン3"]
-        # )
-        if selection == "レッソン1":
-            selected_lessons = {
-                "text": dataset.text_data[0],
-                "video": dataset.video_data[0],
-            }
-        elif selection == "レッソン2":
-            selected_lessons = {
-                "text": dataset.text_data[1],
-                "video": dataset.video_data[1],
-            }
-        elif selection == "レッソン3":
-            selected_lessons = {
-                "text": dataset.text_data[2],
-                "video": dataset.video_data[2],
-            }
+
+        lesson_idx = int(selection.replace("レッソン", "")) - 1
+        selected_lessons = {
+        "text": dataset.text_data[lesson_idx],
+        "video": dataset.video_data[lesson_idx]
+        }
 
         # row2: video, text
         my_grid.video(dataset.path + selected_lessons["video"])
