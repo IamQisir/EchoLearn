@@ -29,6 +29,7 @@ class User:
             os.makedirs(self.today_path, exist_ok=False)
     
     def __hash__(self):
+        # suppose user's name is unique
         return hash(self.name)
 
     def save_to_user_info(self) -> None:
@@ -44,9 +45,7 @@ class User:
         # save all the user's practice history
         # if the folder already exists, don't rewrite it 
         # create the history folder of today within the folder of self.practice_history
-        print(self.today_path)
         result_file_path = f"{self.today_path}{selection}-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.json"
-        print(result_file_path)
         with open(result_file_path, 'w') as f:
             json.dump(pronunciation_result, f, indent=4)
     
@@ -63,7 +62,7 @@ class User:
         except FileExistsError:
             st.warning("ユーザーは既に存在しています！")
         except Exception as e:
-            st.warning("エラーが生じました！係員に連絡してください！")
+            st.warning("エラーが生じました！実験実施者にご連絡してください！")
             print(f"An error occurred while creating the directory: {e}")
         new_user.save_to_user_info()
         return new_user
@@ -127,7 +126,7 @@ class User:
     @classmethod
     def login(cls, name:str, password:str):
         if name in User.user_info:
-            if User.check_password(User.user_info['qi']['password'], password):
+            if User.check_password(User.user_info[name]['password'], password):
                 # user's folder has been already created when in registration
                 return cls(name, password)
         st.warning('入力されたパスワードが間違っています！')

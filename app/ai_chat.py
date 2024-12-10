@@ -1,16 +1,21 @@
-import streamlit as st
-import google.generativeai as genai
 import time
-import pandas as pd
+import streamlit as st
+from openai import AzureOpenAI
 
 class AIChat:
     def __init__(self):
-        genai.configure(api_key=st.secrets["Gemini"]["GOOGLE_API_KEY"])
-        self.model = genai.GenerativeModel("gemini-pro")
+        try:
+            self.client = AzureOpenAI(
+                azure_endpoint=st.secrets['AzureGPT']["AZURE_OPENAI_ENDPOINT"],
+                api_key=st.secrets['AzureGPT']["AZURE_OPENAI_API_KEY"],
+                api_version="2024-02-15-preview"
+            )
+        except Exception as e:
+            st.warning(f"Error initializing Azure OpenAI: {str(e)}")
         self.prompt = ""
 
     def set_prompt(self, error_data):
-        """Generate conversational prompt for Gemini API"""
+        """Generate conversational prompt for Azure GPT"""
         base_prompt = """
         You are a friendly and supportive English pronunciation tutor. I've just finished a pronunciation practice session and would like your help improving. Here are my mistakes:
 
@@ -25,10 +30,9 @@ class AIChat:
 
         Please keep your response friendly and supportive, as if we're having a face-to-face tutoring session!
         """
-        
         self.prompt = base_prompt.format(error_summary=error_data)
-    
-    def format_errors_for_gemini(self, current_errors):
+
+    def format_errors_for_azure(self, current_errors):
         """Format error data into prompt text"""
         if not current_errors:
             return None
@@ -41,90 +45,40 @@ class AIChat:
                     f"with these words: {', '.join(data['words'])}"
                 )
         
-        if not error_summary:
-            return None
-            
-        return "\n".join(error_summary)
+        return "\n".join(error_summary) if error_summary else None
 
     def stream_generator(self, response):
-        # used to save the full response in a streaming mode
+        """Stream Azure GPT response chunks"""
         full_response = ""
         for chunk in response:
-            if chunk.text:
-                new_content = chunk.text
-                full_response += new_content
-                time.sleep(0.01)
-                yield new_content
+            if hasattr(chunk.choices[0].delta, 'content'):
+                new_content = chunk.choices[0].delta.content
+                if new_content:
+                    full_response += new_content
+                    time.sleep(0.01)
+                    yield new_content
 
-    def initial_output(self, error_data):
-        formatted_errors = self.format_errors_for_gemini(error_data)
+    def get_chat_response(self, error_data):
+        """Get streaming response from Azure GPT"""
+        formatted_errors = self.format_errors_for_azure(error_data)
         if not formatted_errors:
             return None
+            
         self.set_prompt(formatted_errors)
-
-        response = self.model.generate_content(self.prompt, stream=True)
-        full_response = ""
-        for content in self.stream_generator(response):
-            full_response += content
-        st.session_state.initial_response = full_response
-        return full_response
-
-# Example usage in Streamlit app
-def main():
-    st.title("AI Chatbox")
-
-    # Initialize chat history
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    # Initialize AIChat instance
-    ai_chat = AIChat()
-
-    # Show chat history
-    def show_history():
-        for message in st.session_state.messages:
-            if message is not None:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-
-    # Display chat messages from history on app rerun
-    show_history()
-
-    # Check if error_table exists and is not empty
-    if "error_table" in st.session_state and not st.session_state.error_table.empty:
-        # Set the prompt
-        ai_chat.set_prompt(st.session_state.error_table)
-
-        # Generate initial output but do not display it yet
-        ai_chat.initial_output()
-
-        # Add the initial response to the chat history
-        st.session_state.messages.append({"role": "assistant", "content": st.session_state.initial_response})
-
-        # Display the initial response
-        with st.chat_message("assistant"):
-            st.markdown(st.session_state.initial_response)
-
-    def chat_bot():    
-        # React to user input
-        if prompt := st.chat_input("What is up?"):
-            # Display user message in chat message container
-            with st.chat_message("user"):
-                st.markdown(prompt)
-            # Add user message to chat history
-            st.session_state.messages.append({"role": "user", "content": prompt})
-
-            # Generate and display assistant response
-            response = ai_chat.model.generate_content(prompt, stream=True)
-            full_response = ""
-            with st.chat_message("assistant"):
-                for content in ai_chat.stream_generator(response):
-                    st.markdown(content)
-                    full_response += content
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
-
-    # Run the chat bot
-    chat_bot()
-
-if __name__ == "__main__":
-    main()
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4",  # Use your deployment name
+                messages=[
+                    {"role": "system", "content": "You are a helpful English pronunciation tutor."},
+                    {"role": "user", "content": self.prompt}
+                ],
+                stream=True,
+                temperature=0.7,
+                max_tokens=800
+            )
+            return self.stream_generator(response)
+            
+        except Exception as e:
+            st.error(f"Error getting chat response: {str(e)}")
+            return None

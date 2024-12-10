@@ -902,7 +902,7 @@ def main():
             if 'learning_state' not in st.session_state or not st.session_state.learning_state['current_errors']:
                 st.write("練習を始めましょう！")
             elif if_started:
-                st.write("Geminiによる発音のアドバイス:")
+                st.write("GPTによる発音のアドバイス:")
                 feedback = ai_chat.initial_output(st.session_state.learning_state['current_errors'])
                 if feedback:
                     st.write(feedback)
