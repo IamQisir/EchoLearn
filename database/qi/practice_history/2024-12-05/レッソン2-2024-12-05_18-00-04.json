@@ -1,0 +1,214 @@
+{
+    "Id": "10afce596bec4f63b9aae04961b2a14c",
+    "RecognitionStatus": "Success",
+    "Offset": 400000,
+    "Duration": 5700000,
+    "Channel": 0,
+    "DisplayText": "Leadership.",
+    "SNR": 33.935795,
+    "NBest": [
+        {
+            "Confidence": 0.87570566,
+            "Lexical": "leadership",
+            "ITN": "leadership",
+            "MaskedITN": "leadership",
+            "Display": "Leadership.",
+            "PronunciationAssessment": {
+                "AccuracyScore": 0.0,
+                "FluencyScore": 100.0,
+                "CompletenessScore": 0.0,
+                "PronScore": 20.0
+            },
+            "Words": [
+                {
+                    "Word": "As",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "President",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "Biden",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "will",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "restored",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "America\u2019s",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "leadership",
+                    "Offset": 400000,
+                    "Duration": 5700000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 2.0,
+                        "ErrorType": "Mispronunciation"
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "liy",
+                            "Grapheme": "lead",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 400000,
+                            "Duration": 500000
+                        },
+                        {
+                            "Syllable": "daxr",
+                            "Grapheme": "er",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 1000000,
+                            "Duration": 800000
+                        },
+                        {
+                            "Syllable": "shihp",
+                            "Grapheme": "ship",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 69.0
+                            },
+                            "Offset": 1900000,
+                            "Duration": 4200000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "l",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 400000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "iy",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 700000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "d",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 1000000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "ax",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 1300000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "r",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 1600000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "sh",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 1900000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "ih",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 45.0
+                            },
+                            "Offset": 2200000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "p",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 76.0
+                            },
+                            "Offset": 2500000,
+                            "Duration": 3600000
+                        }
+                    ]
+                },
+                {
+                    "Word": "and",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "built",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "our",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "communities",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "back",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "better",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                }
+            ]
+        }
+    ]
+}

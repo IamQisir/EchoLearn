@@ -903,7 +903,7 @@ def main():
                 st.write("練習を始めましょう！")
             elif if_started:
                 st.write("GPTによる発音のアドバイス:")
-                feedback = ai_chat.initial_output(st.session_state.learning_state['current_errors'])
+                feedback = ai_chat.get_chat_response(st.session_state.learning_state['current_errors'])
                 if feedback:
                     st.write(feedback)
             else:

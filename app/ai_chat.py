@@ -48,15 +48,19 @@ class AIChat:
         return "\n".join(error_summary) if error_summary else None
 
     def stream_generator(self, response):
-        """Stream Azure GPT response chunks"""
+        """Generate streaming response"""
         full_response = ""
         for chunk in response:
-            if hasattr(chunk.choices[0].delta, 'content'):
-                new_content = chunk.choices[0].delta.content
-                if new_content:
-                    full_response += new_content
-                    time.sleep(0.01)
-                    yield new_content
+            try:
+                if chunk.choices and hasattr(chunk.choices[0].delta, 'content'):
+                    new_content = chunk.choices[0].delta.content
+                    if new_content is not None:  # Add null check
+                        full_response += new_content
+                        time.sleep(0.01)
+                        yield new_content
+            except Exception as e:
+                st.error(f"Streaming error: {str(e)}")
+                continue
 
     def get_chat_response(self, error_data):
         """Get streaming response from Azure GPT"""
@@ -68,7 +72,7 @@ class AIChat:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4",  # Use your deployment name
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are a helpful English pronunciation tutor."},
                     {"role": "user", "content": self.prompt}
@@ -77,6 +81,12 @@ class AIChat:
                 temperature=0.7,
                 max_tokens=800
             )
+            
+            # Add validation for response
+            if not response:
+                st.error("Empty response from API")
+                return None
+                
             return self.stream_generator(response)
             
         except Exception as e:
