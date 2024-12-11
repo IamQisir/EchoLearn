@@ -29,6 +29,7 @@ class AIChat:
         5. 🌟 End with an encouraging message for my next practice
 
         Please keep your response friendly and supportive, as if we're having a face-to-face tutoring session!
+        Don't forget respond in Japanese! But don't teach with Katanana or Hiragana.
         """
         self.prompt = base_prompt.format(error_summary=error_data)
 

@@ -42,35 +42,88 @@ def get_color(score):
         return "#ff0000"
 
 # Function to create radar chart
+import matplotlib.pyplot as plt
+import numpy as np
+
+import matplotlib.pyplot as plt
+import numpy as np
+
 def create_radar_chart(pronunciation_result):
+    """
+    Creates an enhanced radar chart for pronunciation assessment visualization.
+    
+    Args:
+        pronunciation_result (dict): Dictionary containing pronunciation assessment data
+        
+    Returns:
+        matplotlib.figure.Figure: The generated radar chart
+    """
+    # Extract overall assessment
     overall_assessment = pronunciation_result["NBest"][0]["PronunciationAssessment"]
 
+    # Define categories with Japanese labels
     categories = {
-        "正確性スコア": "AccuracyScore",
-        "流暢性スコア": "FluencyScore",
-        "完全性スコア": "CompletenessScore",
-        "発音スコア": "PronScore",
+        "総合": "PronScore",
+        "正確性": "AccuracyScore",
+        "流暢性": "FluencyScore",
+        "完全性": "CompletenessScore",
+        "韻律": "ProsodyScore"
     }
 
+    # Get scores
     scores = [overall_assessment.get(categories[cat], 0) for cat in categories]
 
-    fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(projection="polar"))
+    # Create figure and polar axis
+    fig, ax = plt.subplots(figsize=(12, 12), subplot_kw=dict(projection="polar"))
 
-    angles = [n / float(len(categories)) * 2 * np.pi for n in range(len(categories))]
-    scores += scores[:1]  # repeat the first value to close the polygon
-    angles += angles[:1]
+    # Calculate angles for each category
+    angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False)
 
-    ax.plot(angles, scores, linewidth=1, linestyle="solid")
-    ax.fill(angles, scores, alpha=0.1)
+    # Close the plot by appending first values
+    scores += scores[:1]
+    angles = np.concatenate((angles, [angles[0]]))
 
+    # Plot data
+    ax.plot(angles, scores, 'o-', linewidth=3, label='Score', color='#2E86C1', markersize=10)
+    ax.fill(angles, scores, alpha=0.25, color='#2E86C1')
+
+    # Set chart properties
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(categories.keys())
-    ax.set_ylim(0, 100)
+    ax.set_xticklabels(categories.keys(), size=20)
+    
+    # Add gridlines and adjust their style
+    ax.set_rgrids([20, 40, 60, 80, 100], 
+                  labels=['20', '40', '60', '80', '100'],
+                  angle=0,
+                  fontsize=14)  # Increased from 10 to 14
+    
+    # Add score labels at each point with larger font
+    for angle, score in zip(angles[:-1], scores[:-1]):
+        ax.text(angle, score + 5, f'{score:.1f}', 
+                ha='center', va='center',
+                fontsize=20,  # Increased font size for score labels
+                fontweight='bold')
 
-    plt.title("発音評価のレーダーチャート")
+    # Customize grid
+    ax.grid(True, linestyle='--', alpha=0.7, linewidth=1.5)  # Increased grid line width
+    
+    # Set chart limits and direction
+    ax.set_ylim(0, 100)
+    ax.set_theta_direction(-1)  # Clockwise
+    ax.set_theta_offset(np.pi / 2)  # Start from top
+    
+    # Add title with larger font
+    plt.title("発音評価レーダーチャート\nPronunciation Assessment Radar Chart", 
+              pad=20, size=20, fontweight='bold')  # Increased from 14 to 18
+
+    # Add subtle background color
+    ax.set_facecolor('#F8F9F9')
+    fig.patch.set_facecolor('white')
+
+    # Adjust layout
+    plt.tight_layout()
 
     return fig
-
 
 def create_waveform_plot(audio_file, pronunciation_result):
     y, sr = librosa.load(audio_file)
@@ -173,6 +226,7 @@ def pronunciation_assessment(audio_file, reference_text):
         granularity=speechsdk.PronunciationAssessmentGranularity.Phoneme,
         enable_miscue=True,
     )
+    pronunciation_config.enable_prosody_assessment()
     print("PronunciationAssessmentConfig 作成成功")
 
     try:
@@ -489,6 +543,7 @@ def save_scores_to_json(user, lesson_index, scores_history):
         'AccuracyScore': scores_history['AccuracyScore'],
         'FluencyScore': scores_history['FluencyScore'],
         'CompletenessScore': scores_history['CompletenessScore'],
+        'ProsodyScore': scores_history['ProsodyScore'],
         'PronScore': scores_history['PronScore']
     }
     
@@ -547,12 +602,13 @@ def store_scores(user, lesson_index, pronunciation_result):
             'AccuracyScore': [],
             'FluencyScore': [],
             'CompletenessScore': [],
+            'ProsodyScore': [],
             'PronScore': []
         }
         st.session_state.learning_state['total_errors'][lesson_index] = {}
     
     # Update scores
-    for score_type in ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'PronScore']:
+    for score_type in ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'ProsodyScore', 'PronScore']:
         st.session_state.learning_state['scores_history'][lesson_index][score_type].append(
             scores[score_type]
         )
@@ -631,7 +687,7 @@ def plot_overall_score(data):
 def plot_detail_scores(data):
     """Plot detailed scores components"""
     # Prepare data
-    metrics = ['AccuracyScore', 'FluencyScore', 'CompletenessScore']
+    metrics = ['AccuracyScore', 'FluencyScore', 'CompletenessScore', 'ProsodyScore']
     detail_data = data.melt(
         id_vars=['Attempt'],
         value_vars=metrics,
@@ -662,7 +718,7 @@ def plot_detail_scores(data):
                 scale=alt.Scale(domain=[y_min_detail, y_max_detail])),
         color=alt.Color('Metric:N',
                        scale=alt.Scale(
-                           range=['#00C957', '#4169E1', '#FFD700']
+                           range=['#00C957', '#4169E1', '#FFD700', '#FF69B4']
                        ),
                        legend=alt.Legend(
                            title='評価指標',
@@ -755,6 +811,7 @@ def initialize_lesson_state(user, lesson_index):
             'AccuracyScore': [],
             'FluencyScore': [],
             'CompletenessScore': [],
+            'ProsodyScore': [],
             'PronScore': []
         }
 
@@ -789,7 +846,7 @@ def main():
     tab1, tab2 = st.tabs(['ラーニング', 'まとめ'])
     with tab1:
         # the layout of the grid structure
-        my_grid = extras_grid([0.1, 0.1, 0.8], [0.2, 0.8], 1,  [0.3, 0.7], 1, 1, vertical_align="center")
+        my_grid = extras_grid([0.1, 0.1, 0.8], [0.2, 0.8], 1, 1, [0.3, 0.7], 1, 1, vertical_align="center")
         # when using my_grid, we need the help of st to avoid wrong layout
         # we could load only some rows of my_grid, which is a useful trick
 
@@ -868,14 +925,15 @@ def main():
                         "音声ファイルの処理中に問題が発生した可能性があります。もう一度試すか、別の音声ファイルを使用してください。"
                     )
                     print(traceback.format_exc())
-        # row4: radar chart and errors' type
+        # row4: waveform
+        if st.session_state['learning_data']['waveform_plot']:
+            my_grid.pyplot(st.session_state['learning_data']['waveform_plot'])
+        # row5: radar chart and errors' type
         if st.session_state['learning_data']['radar_chart']:
             my_grid.pyplot(st.session_state['learning_data']['radar_chart'])
         if st.session_state['learning_data']['error_table'] is not None:
             my_grid.dataframe(st.session_state['learning_data']['error_table'], use_container_width=True)
-        # row5: waveform
-        if st.session_state['learning_data']['waveform_plot']:
-            my_grid.pyplot(st.session_state['learning_data']['waveform_plot'])
+        
         # row6: summarization of syllable mistakes and feedback of AI
         if st.session_state['learning_data']['syllable_table']:
             my_grid.markdown(st.session_state['learning_data']['syllable_table'], unsafe_allow_html=True)
@@ -888,7 +946,7 @@ def main():
             falling_speed=5,
             animation_length=1
         )
-    
+
     with tab2:
         progress_plot = plot_score_history()
         if progress_plot:
