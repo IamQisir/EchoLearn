@@ -1,199 +1,114 @@
 import streamlit as st
-import librosa
-import plotly.graph_objects as go
-import numpy as np
-import base64
-from streamlit_plotly_events import plotly_events
-import json
+from PIL import Image
+import os
+from datetime import datetime
 
-if 'audio_loaded' not in st.session_state:
-    st.session_state.audio_loaded = False
+def save_audio_file(base_dir, audio_data, sentence_num):
+    try:
+        if not audio_data:
+            st.warning("録音がありません。録音してください。", icon="⚠️")
+            return None
+            
+        # Generate unique filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"sentence{sentence_num}_{timestamp}.wav"
+        file_path = os.path.join(base_dir, filename)
+        
+        # Save audio data - use getvalue() to get the bytes
+        with open(file_path, "wb") as f:
+            f.write(audio_data.getvalue())
+            
+        return file_path
+    except Exception as e:
+        st.error(f"音声ファイルの保存エラー：{str(e)}")
+        return None
 
-def get_color(score):
-    if score >= 80:
-        return 'rgb(0, 200, 0)'
-    elif score >= 60:   
-        return 'rgb(255, 165, 0)'
+def create_user_directory(romaji):
+    try:
+        # Create base directory if it doesn't exist
+        base_dir = os.path.join("database", "pre_experiment", romaji)
+        os.makedirs(base_dir, exist_ok=True)
+        return base_dir
+    except Exception as e:
+        st.error(f"ディレクトリ作成エラー：{str(e)}")
+        return None
+
+# Page title
+st.title("実験前のデータ収集😎")
+
+# Initialize session state
+if "user_data" not in st.session_state:
+    st.session_state.user_data = {
+        "name": None,
+        "romaji": None,
+        "base_dir": None,
+        "photo_saved": False,
+        "sentence_counts": [10, 10],
+        "audio_paths": [None, None]
+    }
+
+user_data = st.session_state.user_data
+
+# User info section
+st.subheader("1. あなたの個人情報を入れてください")
+user_data["name"] = st.text_input("あなたの名前", value=user_data["name"] if user_data["name"] else "")
+user_data["romaji"] = st.text_input("あなたの名前のローマ字", value=user_data["romaji"] if user_data["romaji"] else "")
+
+# Create user directory when both name and romaji are provided
+if user_data["name"] and user_data["romaji"]:
+    if not user_data["base_dir"]:
+        user_data["base_dir"] = create_user_directory(user_data["romaji"])
+
+# Photo upload section
+st.subheader("2. あなたの写真をアップロードしてください")
+photo = st.file_uploader("無地背景のほうがよい", type=['png', 'jpg', 'jpeg'])
+
+if photo:
+    image = Image.open(photo)
+    st.image(image, width=300)
+
+    if not user_data["photo_saved"] and user_data["base_dir"]:
+        photo_path = os.path.join(user_data["base_dir"], f"profile_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{photo.name.split('.')[-1]}")
+        image.save(photo_path)
+        user_data["photo_saved"] = True
+        st.success("写真が保存されました！")
+    elif user_data["photo_saved"]:
+        st.info("写真は既に保存されています。", icon="ℹ️")
+
+# Record audio
+st.subheader("3. 下記のセンテンスを聞いて、リピートしてください")
+
+sentences = [
+    {"text": "Ella found a star through her telescope that sparkled brighter than the others. She wondered if it had planets like Earth.", 
+     "audio": r"E:\Code\EchoLearn\database\learning_database\backup\1_stranger.wav"},
+    {"text": "A rocket roared into the sky, leaving a trail of fire and smoke. Tim imagined himself as the astronaut waving goodbye.", 
+     "audio": r"E:\Code\EchoLearn\database\learning_database\backup\2_stranger.wav"}
+]
+
+for i, sentence in enumerate(sentences):
+    with st.form(f"sentence{i+1}"):
+        st.write(sentence["text"])
+        st.audio(sentence["audio"])
+        audio_recording = st.audio_input("録音しましょう")
+        submitted = st.form_submit_button("アップロードしましょう")
+
+        if submitted and user_data["base_dir"]:
+            if audio_recording:
+                filepath = save_audio_file(user_data["base_dir"], audio_recording, i)
+                if filepath:
+                    user_data["sentence_counts"][i] -= 1
+                    user_data["audio_paths"][i] = filepath
+                    st.info(f'センテンス{i+1}は、また{user_data["sentence_counts"][i]}回を練習しましょう', icon="ℹ️")
+            else:
+                st.warning("録音データがありません。録音してください。", icon="⚠️")
+
+# Check if all recordings are complete
+if all(count <= 0 for count in user_data["sentence_counts"]):
+    st.success("データの収集は、終了でございます。ご協力どうぞよろしくお願いいたします。")
+    if all(user_data["audio_paths"]):
+        st.write("保存された音声ファイル:")
+        for i, path in enumerate(user_data["audio_paths"]):
+            st.write(f"センテンス{i+1}: {path}")
+            st.audio(path)
     else:
-        return 'rgb(255, 0, 0)'
-
-def get_audio_html(file_path, start_time, duration):
-    audio_html = f"""
-        <style>
-            audio {{
-                display: none;
-            }}
-        </style>
-        <div id="audio-container">
-            <audio id="audio-player">
-                <source src="data:audio/wav;base64,{get_audio_base64(file_path)}" type="audio/wav">
-            </audio>
-        </div>
-        <script>
-            var audio = document.getElementById("audio-player");
-            audio.currentTime = {start_time};
-            audio.play().catch(e => console.log("Play prevented:", e));
-            setTimeout(() => {{
-                audio.pause();
-            }}, {duration * 1000});
-        </script>
-    """
-    return audio_html
-
-@st.cache_data
-def get_audio_base64(file_path):
-    with open(file_path, "rb") as audio_file:
-        audio_bytes = audio_file.read()
-    return base64.b64encode(audio_bytes).decode()
-
-@st.cache_data
-def load_audio(file_path):
-    y, sr = librosa.load(file_path)
-    return y, sr
-
-def main():
-    st.title("発音評価の可視化")
-
-    # 配置一个空的容器用于音频播放
-    audio_player = st.empty()
-    
-    # 文件上传
-    audio_file = st.file_uploader("音声ファイルをアップロード", type=['wav'])
-    
-    if audio_file is not None:
-        # 保存上传的文件
-        with open("temp.wav", "wb") as f:
-            f.write(audio_file.getbuffer())
-        
-        # 加载音频
-        y, sr = load_audio("temp.wav")
-        duration = len(y) / sr
-        times = np.linspace(0, duration, num=len(y))
-
-        # 配置固定的图表容器
-        plot_container = st.empty()
-        
-        # 读取JSON文件
-        with open(r'E:\Code\EchoLearn\database\qi\practice_history\2024-12-06\レッソン1-2024-12-06_15-29-52.json', 'r') as f:
-            pronunciation_result = json.load(f)
-        
-        # 创建图表
-        fig = go.Figure()
-        
-        # 添加基础波形
-        fig.add_trace(go.Scatter(
-            x=times,
-            y=y,
-            mode='lines',
-            name='waveform',
-            line=dict(color='lightgray', width=1),
-            opacity=0.3
-        ))
-        
-        # 处理每个单词
-        words = pronunciation_result["NBest"][0]["Words"]
-        for word in words:
-            if ("PronunciationAssessment" not in word or 
-                "ErrorType" not in word["PronunciationAssessment"] or
-                word["PronunciationAssessment"]["ErrorType"] == "Omission"):
-                continue
-                
-            start_time = word["Offset"] / 10000000
-            word_duration = word["Duration"] / 10000000
-            end_time = start_time + word_duration
-            
-            start_idx = int(start_time * sr)
-            end_idx = int(end_time * sr)
-            word_y = y[start_idx:end_idx]
-            word_times = times[start_idx:end_idx]
-            
-            score = word["PronunciationAssessment"].get("AccuracyScore", 0)
-            color = get_color(score)
-            
-            # 添加单词波形
-            fig.add_trace(go.Scatter(
-                x=word_times,
-                y=word_y,
-                mode='lines',
-                name=word["Word"],
-                line=dict(color=color, width=2),
-                customdata=[[start_time, word_duration]],
-                hovertemplate=f"{word['Word']}<br>Score: {score}<extra></extra>"
-            ))
-            
-            # 添加垂直线和标注
-            fig.add_vline(x=start_time, line_dash="dash", line_color="gray", opacity=0.5)
-            fig.add_vline(x=end_time, line_dash="dash", line_color="gray", opacity=0.5)
-            
-            # 添加单词标注
-            fig.add_annotation(
-                x=(start_time + end_time) / 2,
-                y=min(y),
-                text=f"{word['Word']} ({score})",
-                showarrow=False,
-                textangle=45,
-                font=dict(size=10),
-                yanchor='top'
-            )
-            
-            # 添加音素标注
-            if "Phonemes" in word:
-                for phoneme in word["Phonemes"]:
-                    phoneme_start = phoneme["Offset"] / 10000000
-                    phoneme_score = phoneme["PronunciationAssessment"].get("AccuracyScore", 0)
-                    phoneme_color = get_color(phoneme_score)
-                    
-                    fig.add_annotation(
-                        x=phoneme_start,
-                        y=max(y),
-                        text=phoneme["Phoneme"],
-                        showarrow=False,
-                        font=dict(size=8, color=phoneme_color),
-                        yanchor='bottom'
-                    )
-
-        # 更新布局
-        fig.update_layout(
-            title=dict(
-                text='発音評価の可視化（单词をクリックして音声を再生）',
-                y=0.95
-            ),
-            xaxis=dict(
-                title='Time (seconds)',
-                fixedrange=True,
-                showgrid=False,
-                rangeslider=dict(visible=False)
-            ),
-            yaxis=dict(
-                title='Amplitude',
-                fixedrange=True,
-                showgrid=False,
-                range=[min(y) * 1.2, max(y) * 1.2]
-            ),
-            showlegend=False,
-            height=600,
-            hovermode='closest',
-            margin=dict(l=50, r=50, t=50, b=50),
-            plot_bgcolor='white',
-            modebar=dict(remove=['zoom', 'pan', 'autoscale', 'zoomin', 'zoomout'])
-        )
-
-        # 使用 st.empty() 显示图表并获取点击事件
-        with plot_container:
-            clicked = plotly_events(fig, override_width="100%", click_event=True)
-            
-            if clicked:
-                point = clicked[0]
-                trace_index = point.get('curveNumber', 0)
-                if trace_index > 0:  # 跳过基础波形
-                    point_data = fig.data[trace_index]
-                    if hasattr(point_data, 'customdata') and len(point_data.customdata) > 0:
-                        start_time, duration = point_data.customdata[0]
-                        with audio_player:
-                            st.components.v1.html(
-                                get_audio_html("temp.wav", start_time, duration),
-                                height=0
-                            )
-
-if __name__ == "__main__":
-    main()
+        st.warning("全ての音声が保存されていません。", icon="⚠️")

@@ -1,0 +1,66 @@
+{
+    "lesson_1": {
+        "current": {
+            "省略 (Omission)": {
+                "count": 0,
+                "words": []
+            },
+            "挿入 (Insertion)": {
+                "count": 1,
+                "words": [
+                    "a"
+                ]
+            },
+            "発音ミス (Mispronunciation)": {
+                "count": 2,
+                "words": [
+                    "roared",
+                    "into"
+                ]
+            },
+            "不適切な間 (UnexpectedBreak)": {
+                "count": 0,
+                "words": []
+            },
+            "間の欠如 (MissingBreak)": {
+                "count": 0,
+                "words": []
+            },
+            "単調 (Monotone)": {
+                "count": 0,
+                "words": []
+            }
+        },
+        "total": {
+            "省略 (Omission)": {
+                "count": 0,
+                "words": []
+            },
+            "挿入 (Insertion)": {
+                "count": 1,
+                "words": [
+                    "a"
+                ]
+            },
+            "発音ミス (Mispronunciation)": {
+                "count": 2,
+                "words": [
+                    "roared",
+                    "into"
+                ]
+            },
+            "不適切な間 (UnexpectedBreak)": {
+                "count": 0,
+                "words": []
+            },
+            "間の欠如 (MissingBreak)": {
+                "count": 0,
+                "words": []
+            },
+            "単調 (Monotone)": {
+                "count": 0,
+                "words": []
+            }
+        }
+    }
+}

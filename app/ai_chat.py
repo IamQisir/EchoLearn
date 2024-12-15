@@ -17,7 +17,7 @@ class AIChat:
     def set_prompt(self, error_data):
         """Generate conversational prompt for Azure GPT"""
         base_prompt = """
-        You are a friendly and supportive English pronunciation tutor. I've just finished a pronunciation practice session and would like your help improving. Here are my mistakes:
+        You are a ChatGPT 4o English pronunciation tutor. I've just finished a pronunciation practice session and would like your help improving. Here are my mistakes:
 
         {error_summary}
 

@@ -60,7 +60,7 @@ def process_txt_files(input_dir: str, output_dir: str) -> None:
             # Get filename without extension
             base_name = Path(txt_file).stem
             # Create output wav path
-            wav_path = os.path.join(output_dir, f"{base_name}.wav")
+            wav_path = os.path.join(output_dir, f"{base_name}_stranger.wav")
             
             # Read text content
             with open(txt_file, 'r', encoding='utf-8') as f:
@@ -77,5 +77,5 @@ def process_txt_files(input_dir: str, output_dir: str) -> None:
 
 # Example usage
 if __name__ == "__main__":
-    folder_path = r"D:\Documents\my_voice"
+    folder_path = r"E:\Code\EchoLearn\database\learning_database\backup"
     process_txt_files(folder_path, folder_path)
