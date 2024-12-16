@@ -1,0 +1,24 @@
+{
+    "lesson_0": {
+        "AccuracyScore": [
+            81.0,
+            83.0,
+            88.0
+        ],
+        "FluencyScore": [
+            84.0,
+            95.0,
+            88.0
+        ],
+        "CompletenessScore": [
+            81.0,
+            76.0,
+            86.0
+        ],
+        "PronScore": [
+            81.6,
+            81.2,
+            86.8
+        ]
+    }
+}
