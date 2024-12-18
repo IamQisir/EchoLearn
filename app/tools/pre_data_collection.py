@@ -61,7 +61,7 @@ if user_data["name"] and user_data["romaji"]:
 
 # Photo upload section
 st.subheader("2. あなたの写真をアップロードしてください")
-photo = st.file_uploader("無地背景のほうがよい", type=['png', 'jpg', 'jpeg'])
+photo = st.file_uploader("無地背景のほうが良いです。", type=['png', 'jpg', 'jpeg'])
 
 if photo:
     image = Image.open(photo)
@@ -82,7 +82,7 @@ sentences = [
     {"text": "Ella found a star through her telescope that sparkled brighter than the others. She wondered if it had planets like Earth.", 
      "audio": r"E:\Code\EchoLearn\database\learning_database\backup\1_stranger.wav"},
     {"text": "A rocket roared into the sky, leaving a trail of fire and smoke. Tim imagined himself as the astronaut waving goodbye.", 
-     "audio": r"E:\Code\EchoLearn\database\learning_database\backup\2_stranger.wav"}
+     "audio": r"database\learning_database\backup\2_stranger.wav"}
 ]
 
 for i, sentence in enumerate(sentences):

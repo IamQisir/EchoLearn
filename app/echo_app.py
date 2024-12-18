@@ -145,4 +145,7 @@ else:
 
 # Set the header of sidebar and run the main page
 st.sidebar.header("EchoLearnへようこそ! 😊")
+if st.session_state.logged_in:
+    st.sidebar.markdown("すべての練習が終わったら、下記のアンケートを回答してください！")
+    st.sidebar.markdown("[最後のアンケート🫡](https://docs.google.com/forms/d/e/1FAIpQLSfNu5vK-SN0ZY43DoBDz48xTyVH4JtkHEsJln5I2gDeNqhIeA/viewform?usp=dialog)")
 pg.run()
