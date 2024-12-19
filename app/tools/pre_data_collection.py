@@ -43,8 +43,8 @@ if "user_data" not in st.session_state:
         "romaji": None,
         "base_dir": None,
         "photo_saved": False,
-        "sentence_counts": [10, 10],
-        "audio_paths": [None, None]
+        "sentence_counts": [3],
+        "audio_paths": [None]
     }
 
 user_data = st.session_state.user_data
@@ -79,10 +79,8 @@ if photo:
 st.subheader("3. 下記のセンテンスを聞いて、リピートしてください")
 
 sentences = [
-    {"text": "Ella found a star through her telescope that sparkled brighter than the others. She wondered if it had planets like Earth.", 
-     "audio": r"E:\Code\EchoLearn\database\learning_database\backup\1_stranger.wav"},
-    {"text": "A rocket roared into the sky, leaving a trail of fire and smoke. Tim imagined himself as the astronaut waving goodbye.", 
-     "audio": r"database\learning_database\backup\2_stranger.wav"}
+    {"text": "Through a powerful telescope, Sara saw a galaxy spinning slowly. Its spiral arms looked like a giant whirlpool.", 
+     "audio": r"database/learning_database/backup/9_stranger.wav"}
 ]
 
 for i, sentence in enumerate(sentences):
@@ -105,10 +103,4 @@ for i, sentence in enumerate(sentences):
 # Check if all recordings are complete
 if all(count <= 0 for count in user_data["sentence_counts"]):
     st.success("データの収集は、終了でございます。ご協力どうぞよろしくお願いいたします。")
-    if all(user_data["audio_paths"]):
-        st.write("保存された音声ファイル:")
-        for i, path in enumerate(user_data["audio_paths"]):
-            st.write(f"センテンス{i+1}: {path}")
-            st.audio(path)
-    else:
-        st.warning("全ての音声が保存されていません。", icon="⚠️")
+    st.sidebar.markdown("[アンケート🫡](https://docs.google.com/forms/d/e/1FAIpQLSczmtjqEsaVT6BizQI8N8xzHsicAikQHRaknm3qL2fGo7Vq1Q/viewform?usp=dialog)")
