@@ -101,17 +101,8 @@ def register():
                 st.session_state.logged_in = True
                 # !!!pass the user obj to any page!!!
                 st.session_state.user = user
-                global learning_page
-                st.switch_page(learning_page)
-    new_username = st.text_input("ユーザー名", key="new_username")
-    new_password = st.text_input("パスワード", key="new_password", type="password")
-    if st.button("新規登録"):
-        new_user = User.register(new_username, new_password)
-        if new_user:
-            sleep(2)
-            # initialize learning_data in st.session_state
-            global login_page
-            st.switch_page(login_page)
+                global login_page
+                st.switch_page(login_page)
 
 def logout():
     # After logging out, delete all the keys of st.session_state

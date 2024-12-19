@@ -31,10 +31,10 @@ def get_color(score):
     if score >= 90:
         # green
         return "#00ff00"
-    elif score >= 75:
+    elif score >= 70:
         # yellow
         return "#ffc000"
-    elif score >= 50:
+    elif score >= 60:
         # orange
         return "#ff4b4b"
     else:
@@ -227,6 +227,7 @@ def pronunciation_assessment(audio_file, reference_text):
         enable_miscue=True,
     )
     pronunciation_config.enable_prosody_assessment()
+    pronunciation_config.phoneme_alphabet = "IPA"
     print("PronunciationAssessmentConfig 作成成功")
 
     try:
@@ -334,85 +335,6 @@ def create_doughnut_chart(data, title):
         height=300
     )
 
-def convert_to_ipa(pronunciation):
-    """Convert Azure phonemes to IPA symbols"""
-    # Azure phoneme to IPA mapping
-    phoneme_map = {
-        # Vowels
-        'aa': 'ɑ',  # odd
-        'ae': 'æ',  # at
-        'ah': 'ʌ',  # hut
-        'ao': 'ɔ',  # caught
-        'aw': 'aʊ', # how
-        'ax': 'ə',  # about
-        'ay': 'aɪ', # hide
-        'eh': 'ɛ',  # red
-        'er': 'ɝ',  # hurt
-        'ey': 'eɪ', # say
-        'ih': 'ɪ',  # it
-        'iy': 'i',  # eat
-        'ow': 'oʊ', # show
-        'oy': 'ɔɪ', # toy
-        'uh': 'ʊ',  # hood
-        'uw': 'u',  # two
-
-        # Consonants
-        'b': 'b',   # be
-        'ch': 'tʃ', # cheese
-        'd': 'd',   # dee
-        'dh': 'ð',  # thee
-        'f': 'f',   # fee
-        'g': 'g',   # green
-        'hh': 'h',  # he
-        'jh': 'dʒ', # gee
-        'k': 'k',   # key
-        'l': 'l',   # lee
-        'm': 'm',   # me
-        'n': 'n',   # knee
-        'ng': 'ŋ',  # ping
-        'p': 'p',   # pee
-        'r': 'r',   # read
-        's': 's',   # sea
-        'sh': 'ʃ',  # she
-        't': 't',   # tea
-        'th': 'θ',  # thin
-        'v': 'v',   # vee
-        'w': 'w',   # we
-        'y': 'j',   # yield
-        'z': 'z',   # zee
-        'zh': 'ʒ'   # measure
-    }
-
-    # Special combinations and rules
-    special_combinations = {
-        'dx': 'ɾ',  # flap D as in rider
-        'nx': 'ɾ̃',  # winner
-        'el': 'ḷ',  # bottle
-        'em': 'm̩',  # rhythm
-        'en': 'n̩'   # button
-    }
-
-    def convert_phoneme(phoneme):
-        # Try special combinations first
-        if phoneme in special_combinations:
-            return special_combinations[phoneme]
-        # Then try regular phoneme map
-        if phoneme in phoneme_map:
-            return phoneme_map[phoneme]
-        return phoneme  # Return original if no mapping found
-
-    # Split input into phonemes
-    phonemes = pronunciation.strip().split()
-    
-    # Convert each phoneme and join
-    ipa = ' '.join(convert_phoneme(p) for p in phonemes)
-    
-    # Post-processing rules
-    ipa = ipa.replace('ˈ ', 'ˈ')  # Fix stress mark spacing
-    ipa = ipa.replace('ˌ ', 'ˌ')  # Fix secondary stress mark spacing
-    
-    return ipa
-
 def create_syllable_table(pronunciation_result):
     output = """
     <style>
@@ -432,7 +354,7 @@ def create_syllable_table(pronunciation_result):
 
         if "Phonemes" in word:
             for phoneme in word["Phonemes"]:
-                phoneme_text = convert_to_ipa(phoneme["Phoneme"])
+                phoneme_text = phoneme["Phoneme"]
                 phoneme_score = phoneme.get("PronunciationAssessment", {}).get(
                     "AccuracyScore", 0
                 )
