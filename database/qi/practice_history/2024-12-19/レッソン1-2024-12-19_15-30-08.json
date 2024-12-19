@@ -1,0 +1,560 @@
+{
+    "Id": "f081a521f78c4d0cac1df1f71e2259ce",
+    "RecognitionStatus": "Success",
+    "Offset": 12200000,
+    "Duration": 15200000,
+    "Channel": 0,
+    "DisplayText": "A rocket roared into the sky.",
+    "SNR": 22.16065,
+    "NBest": [
+        {
+            "Confidence": 0.87031794,
+            "Lexical": "a rocket roared into the sky",
+            "ITN": "a rocket roared into the sky",
+            "MaskedITN": "a rocket roared into the sky",
+            "Display": "A rocket roared into the sky.",
+            "PronunciationAssessment": {
+                "AccuracyScore": 21.0,
+                "FluencyScore": 91.0,
+                "ProsodyScore": 69.8,
+                "CompletenessScore": 19.0,
+                "PronScore": 44.0
+            },
+            "Words": [
+                {
+                    "Word": "a",
+                    "Offset": 12200000,
+                    "Duration": 2200000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 100.0,
+                        "ErrorType": "None",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "\u0259",
+                            "Grapheme": "a",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 12200000,
+                            "Duration": 2200000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "\u0259",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 12200000,
+                            "Duration": 2200000
+                        }
+                    ]
+                },
+                {
+                    "Word": "rocket",
+                    "Offset": 14500000,
+                    "Duration": 3900000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 76.0,
+                        "ErrorType": "None",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "UnexpectedBreak": {
+                                        "Confidence": 5.2287582e-08
+                                    },
+                                    "MissingBreak": {
+                                        "Confidence": 1.0
+                                    },
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "r\u0251",
+                            "Grapheme": "rock",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 14500000,
+                            "Duration": 1300000
+                        },
+                        {
+                            "Syllable": "k\u026at",
+                            "Grapheme": "et",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 78.0
+                            },
+                            "Offset": 15900000,
+                            "Duration": 2500000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "r",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 14500000,
+                            "Duration": 700000
+                        },
+                        {
+                            "Phoneme": "\u0251",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 15300000,
+                            "Duration": 500000
+                        },
+                        {
+                            "Phoneme": "k",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 15900000,
+                            "Duration": 700000
+                        },
+                        {
+                            "Phoneme": "\u026a",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 78.0
+                            },
+                            "Offset": 16700000,
+                            "Duration": 1100000
+                        },
+                        {
+                            "Phoneme": "t",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 48.0
+                            },
+                            "Offset": 17900000,
+                            "Duration": 500000
+                        }
+                    ]
+                },
+                {
+                    "Word": "roared",
+                    "Offset": 18500000,
+                    "Duration": 1300000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 35.0,
+                        "ErrorType": "Mispronunciation",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "UnexpectedBreak": {
+                                        "Confidence": 5.2287582e-08
+                                    },
+                                    "MissingBreak": {
+                                        "Confidence": 1.0
+                                    },
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "r\u0254rd",
+                            "Grapheme": "roared",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 33.0
+                            },
+                            "Offset": 18500000,
+                            "Duration": 1300000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "r",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 9.0
+                            },
+                            "Offset": 18500000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "\u0254",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 87.0
+                            },
+                            "Offset": 18800000,
+                            "Duration": 400000
+                        },
+                        {
+                            "Phoneme": "r",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 19300000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "d",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 0.0
+                            },
+                            "Offset": 19600000,
+                            "Duration": 200000
+                        }
+                    ]
+                },
+                {
+                    "Word": "into",
+                    "Offset": 19900000,
+                    "Duration": 1300000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 51.0,
+                        "ErrorType": "Mispronunciation",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "UnexpectedBreak": {
+                                        "Confidence": 5.2287582e-08
+                                    },
+                                    "MissingBreak": {
+                                        "Confidence": 1.0
+                                    },
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "\u026an",
+                            "Grapheme": "in",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 50.0
+                            },
+                            "Offset": 19900000,
+                            "Duration": 500000
+                        },
+                        {
+                            "Syllable": "t\u0259",
+                            "Grapheme": "to",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 52.0
+                            },
+                            "Offset": 20500000,
+                            "Duration": 700000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "\u026a",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 25.0
+                            },
+                            "Offset": 19900000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "n",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 75.0
+                            },
+                            "Offset": 20200000,
+                            "Duration": 200000
+                        },
+                        {
+                            "Phoneme": "t",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 55.0
+                            },
+                            "Offset": 20500000,
+                            "Duration": 300000
+                        },
+                        {
+                            "Phoneme": "\u0259",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 49.0
+                            },
+                            "Offset": 20900000,
+                            "Duration": 300000
+                        }
+                    ]
+                },
+                {
+                    "Word": "the",
+                    "Offset": 21300000,
+                    "Duration": 900000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 80.0,
+                        "ErrorType": "None",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "UnexpectedBreak": {
+                                        "Confidence": 5.2287582e-08
+                                    },
+                                    "MissingBreak": {
+                                        "Confidence": 1.0
+                                    },
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "\u00f0\u0259",
+                            "Grapheme": "the",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 80.0
+                            },
+                            "Offset": 21300000,
+                            "Duration": 900000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "\u00f0",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 80.0
+                            },
+                            "Offset": 21300000,
+                            "Duration": 300000
+                        },
+                        {
+                            "Phoneme": "\u0259",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 80.0
+                            },
+                            "Offset": 21700000,
+                            "Duration": 500000
+                        }
+                    ]
+                },
+                {
+                    "Word": "sky",
+                    "Offset": 22300000,
+                    "Duration": 5100000,
+                    "PronunciationAssessment": {
+                        "AccuracyScore": 100.0,
+                        "ErrorType": "None",
+                        "Feedback": {
+                            "Prosody": {
+                                "Break": {
+                                    "ErrorTypes": [
+                                        "None"
+                                    ],
+                                    "UnexpectedBreak": {
+                                        "Confidence": 5.2287582e-08
+                                    },
+                                    "MissingBreak": {
+                                        "Confidence": 1.0
+                                    },
+                                    "BreakLength": 0
+                                },
+                                "Intonation": {
+                                    "ErrorTypes": [],
+                                    "Monotone": {
+                                        "SyllablePitchDeltaConfidence": 0.21894242
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "Syllables": [
+                        {
+                            "Syllable": "ska\u026a",
+                            "Grapheme": "sky",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 22300000,
+                            "Duration": 5100000
+                        }
+                    ],
+                    "Phonemes": [
+                        {
+                            "Phoneme": "s",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 22300000,
+                            "Duration": 700000
+                        },
+                        {
+                            "Phoneme": "k",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 23100000,
+                            "Duration": 1100000
+                        },
+                        {
+                            "Phoneme": "a\u026a",
+                            "PronunciationAssessment": {
+                                "AccuracyScore": 100.0
+                            },
+                            "Offset": 24300000,
+                            "Duration": 3100000
+                        }
+                    ]
+                },
+                {
+                    "Word": "leaving",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "a",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "trail",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "of",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "fire",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "and",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "smoke",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "Tim",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "imagined",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "himself",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "as",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "the",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "astronaut",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "waving",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                },
+                {
+                    "Word": "goodbye",
+                    "PronunciationAssessment": {
+                        "ErrorType": "Omission"
+                    },
+                    "Phonemes": []
+                }
+            ]
+        }
+    ]
+}

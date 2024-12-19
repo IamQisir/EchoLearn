@@ -41,13 +41,6 @@ def get_color(score):
         # red
         return "#ff0000"
 
-# Function to create radar chart
-import matplotlib.pyplot as plt
-import numpy as np
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 def create_radar_chart(pronunciation_result):
     """
     Creates an enhanced radar chart for pronunciation assessment visualization.
@@ -443,7 +436,7 @@ def course_navigation(my_grid, courses):
         questionnaire_address = "https://docs.google.com/forms/d/e/1FAIpQLSchcktzjBXCLhKVWvMScXGUHWCw96iJHnW6N2TC90LVMRNMhg/viewform?usp=dialog"
     elif st.session_state.lesson_index == 1:
         questionnaire_address = "https://docs.google.com/forms/d/e/1FAIpQLScLOpAzvfBHLarFcWb3khTDrc8Z5VyZDr5IO33D5oQimzOO7A/viewform?usp=dialog"
-    my_grid.info(f"{current_course}を練習しましょう😆　👉　 10回の練習が終わったら、アンケートを回答してください！[アンケート🫡]({questionnaire_address})")
+    my_grid.info(f"{current_course}を練習しましょう😆👉 10回の練習が終わったら、アンケートを回答してください！[アンケート🫡]({questionnaire_address})")
 
     return current_course
 
