@@ -6,5 +6,9 @@
     "tryout": {
         "password": "$2b$12$AawhyYX5nB0X01G3cj43U.m26EmIMliNQ5u1wDiS2TEfMBxePcEnK",
         "history": []
+    },
+    "hachisuka": {
+        "password": "$2b$12$coSLsvmhDuXalU6k9c/pKOfOXBnU3P2INs2Y7YVsfYksknyjIFE86",
+        "history": []
     }
 }
