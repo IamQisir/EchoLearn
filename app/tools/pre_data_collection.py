@@ -102,5 +102,5 @@ for i, sentence in enumerate(sentences):
 
 # Check if all recordings are complete
 if all(count <= 0 for count in user_data["sentence_counts"]):
-    st.success("データの収集は、終了でございます。アンケートを記入してください。")
-    st.markdown("[アンケート🫡](https://docs.google.com/forms/d/e/1FAIpQLSczmtjqEsaVT6BizQI8N8xzHsicAikQHRaknm3qL2fGo7Vq1Q/viewform?usp=dialog)")
+    st.success("データの収集は、終了でございます。どうぞよろしくお願いいたします🫡")
+    # st.markdown("[アンケート🫡](https://docs.google.com/forms/d/e/1FAIpQLSczmtjqEsaVT6BizQI8N8xzHsicAikQHRaknm3qL2fGo7Vq1Q/viewform?usp=dialog)")
