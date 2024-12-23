@@ -43,7 +43,7 @@ if "user_data" not in st.session_state:
         "romaji": None,
         "base_dir": None,
         "photo_saved": False,
-        "sentence_counts": [10],
+        "sentence_counts": [5],
         "audio_paths": [None]
     }
 
