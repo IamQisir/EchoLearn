@@ -42,7 +42,7 @@ if "user_data" not in st.session_state:
         "romaji": None,
         "base_dir": None,
         "photo_saved": False,
-        "sentence_counts": [5],
+        "sentence_counts": [10],
         "audio_paths": [None]
     }
 
@@ -61,8 +61,8 @@ if user_data["romaji"]:
 st.subheader("2. 下記のセンテンスを聞いて、リピートしてください")
 
 sentences = [
-    {"text": "Through a powerful telescope, Sara saw a galaxy spinning slowly. Its spiral arms looked like a giant whirlpool.", 
-     "audio": r"database/learning_database/backup/9_stranger.wav"}
+    {"text": "Mila tried on a space suit in the museum. She pretended to walk on Mars as her friends laughed.", 
+     "audio": r"database/learning_database/backup/8_stranger.wav"}
 ]
 
 for i, sentence in enumerate(sentences):

@@ -432,10 +432,15 @@ def course_navigation(my_grid, courses):
             
     # Show current course name
     current_course = courses[st.session_state.lesson_index]
+    questionnaire_lst = [
+        "https://docs.google.com/forms/d/e/1FAIpQLSd4pu9pK-tZ6ETRH_dBQTqgE1KOj52I9c7j6AqKFH8IwG8v8w/viewform?usp=dialog",
+        "https://docs.google.com/forms/d/e/1FAIpQLSchcktzjBXCLhKVWvMScXGUHWCw96iJHnW6N2TC90LVMRNMhg/viewform?usp=dialog"
+
+    ]
     if st.session_state.lesson_index == 0:
-        questionnaire_address = "https://docs.google.com/forms/d/e/1FAIpQLSchcktzjBXCLhKVWvMScXGUHWCw96iJHnW6N2TC90LVMRNMhg/viewform?usp=dialog"
+        questionnaire_address = questionnaire_lst[0]
     elif st.session_state.lesson_index == 1:
-        questionnaire_address = "https://docs.google.com/forms/d/e/1FAIpQLSd4pu9pK-tZ6ETRH_dBQTqgE1KOj52I9c7j6AqKFH8IwG8v8w/viewform?usp=dialog"
+        questionnaire_address = questionnaire_lst[1]
     my_grid.info(f"{current_course}を練習しましょう😆👉 10回の練習が終わったら、アンケートを回答してください！[アンケート🫡]({questionnaire_address})")
 
     return current_course
