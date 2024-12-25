@@ -29,7 +29,7 @@ class AIChat:
         5. 🌟 End with an encouraging message for my next practice
 
         Please keep your response friendly and supportive, as if we're having a face-to-face tutoring session!
-        Please respond in Chinese!
+        Please respond in Japanese!
         """
         self.prompt = base_prompt.format(error_summary=error_data)
 
