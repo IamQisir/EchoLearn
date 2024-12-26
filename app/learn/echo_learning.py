@@ -756,7 +756,7 @@ def main():
         dataset.load_data()
         st.session_state.dataset = dataset
     dataset = st.session_state.dataset
-    lessons = [f'レッソン{i}' for i in range(1, len(dataset.text_data) + 1)]
+    lessons = [f'レッスン{i}' for i in range(1, len(dataset.text_data) + 1)]
     
     # preload the scores history
     if 'scores_history' not in st.session_state:
@@ -776,7 +776,7 @@ def main():
         # row1: selectbox and blank
         selection = course_navigation(my_grid, lessons)
 
-        lesson_idx = int(selection.replace("レッソン", "")) - 1
+        lesson_idx = int(selection.replace("レッスン", "")) - 1
         selected_lessons = {
         "text": dataset.text_data[lesson_idx],
         "video": dataset.video_data[lesson_idx]
