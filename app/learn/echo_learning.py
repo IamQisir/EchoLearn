@@ -438,9 +438,9 @@ def course_navigation(my_grid, courses):
 
     ]
     if st.session_state.lesson_index == 0:
-        questionnaire_address = questionnaire_lst[1]
-    elif st.session_state.lesson_index == 1:
         questionnaire_address = questionnaire_lst[0]
+    elif st.session_state.lesson_index == 1:
+        questionnaire_address = questionnaire_lst[1]
     my_grid.info(f"{current_course}を練習しましょう😆👉 10回の練習が終わったら、アンケートを回答してください！[アンケート🫡]({questionnaire_address})")
 
     return current_course
@@ -763,7 +763,7 @@ def main():
         for i in range(len(lessons)):
             user.load_scores_history(i)
 
-    st.title("エコー英語学習システム😆")
+    st.title("フォノエコー英語発音トレーニングシステム😆")
     
     # set the names of tabs
     tab1, tab2 = st.tabs(['ラーニング', 'まとめ'])

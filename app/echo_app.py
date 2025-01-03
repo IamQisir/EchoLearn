@@ -22,7 +22,7 @@ def save_user_info(user_info):
     
 # Load user_info as a global variable
 
-st.logo(image="logo/EchoLearn.png", icon_image="logo/EchoLearn.png")
+st.logo(image="logo/PhonoEcho.png", icon_image="logo/PhonoEcho.png")
 st.markdown(
     """
     <style>
@@ -57,14 +57,14 @@ if "learning_data" not in st.session_state:
 def login():
     _, cent_co, _ = st.columns([0.2, 0.7, 0.1])
     with cent_co:
-        with open("logo/EchoLearn.gif", "rb") as f:
+        with open("logo/PhonoEcho.gif", "rb") as f:
             contents = f.read()
             data_url = base64.b64encode(contents).decode("utf-8")
         st.markdown(
             f'<img src="data:image/gif;base64,{data_url}" alt="cat gif" class="center">',
             unsafe_allow_html=True,
         )
-    st.markdown("# EchoLearnへよこそう! 😍 発音を上達しましょう!")
+    st.markdown("# PhonoEchoへよこそう! 😍 発音を上達しましょう!")
     with st.form(key='password_form'):
         username = st.text_input("ユーザー名", key="username")
         password = st.text_input("パスワード", key="password", type="password")
@@ -116,8 +116,8 @@ register_page = st.Page(register, title="新規登録", icon=":material/login:")
 logout_page = st.Page(logout, title="ログアウト", icon=":material/logout:")
 
 # Learning-related Page
-learning_page = st.Page("../app/learn/echo_learning.py", title='エコーラーニング', icon="🔥")
-# chatbox_page = st.Page("../app/learn/chatbox.py", title='エコー発音先生', icon="🚨")
+learning_page = st.Page("../app/learn/echo_learning.py", title='フォノエコーラーニング', icon="🔥")
+# chatbox_page = st.Page("../app/learn/chatbox.py", title='フォノエコー発音先生', icon="🚨")
 
 # Set the navigation of sidebar
 if st.session_state.logged_in:
@@ -135,7 +135,7 @@ else:
     )
 
 # Set the header of sidebar and run the main page
-st.sidebar.header("EchoLearnへようこそ! 😊")
+st.sidebar.header("PhonoEchoへようこそ! 😊")
 if st.session_state.logged_in:
     st.sidebar.markdown("すべての練習が終わったら、下記のアンケートを回答してください！")
     st.sidebar.markdown("[最終のアンケート🫡](https://docs.google.com/forms/d/e/1FAIpQLSfNu5vK-SN0ZY43DoBDz48xTyVH4JtkHEsJln5I2gDeNqhIeA/viewform?usp=dialog)")
